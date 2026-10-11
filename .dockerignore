@@ -1,0 +1,15 @@
+.env
+.git
+.venv
+__pycache__
+*.py[cod]
+*.db
+private-objects
+apps/web-next/node_modules
+apps/web-next/.next
+apps/web-next/out
+apps/web-next/.next-route-source
+apps/web-next/data/benchmarks-slim
+eas_backend.egg-info
+.pytest_cache
+.ruff_cache

@@ -1,0 +1,312 @@
+{
+  "title": "Composer 2 Technical Report",
+  "modules": [
+    {
+      "title": "Introduction to Composer 2 and Agentic Software Engineering",
+      "lessons": [
+        {
+          "success": true,
+          "data": {
+            "title": "Composer 2 Base Model",
+            "content": "Composer 2 is a specialized model designed for agentic software engineering. The model demonstrates strong long-term planning and coding intelligence while maintaining the ability to efficiently solve problems for interactive use. Before training, the team evaluated several potential base models including GLM-5, Kimi K2.5, and DeepSeek V3.2. The evaluations measured coding knowledge using FreshBench, state tracking using internal benchmarks, and codebase perplexity using their private monorepo. Kimi K2.5 was selected as the base model for Composer 2 due to its general strong performance and efficiency considerations.",
+            "info": "Look at the candidate base models and the one selected for performance and efficiency.",
+            "question": "What is the name of the base model used for Composer 2?",
+            "questionType": "short-answer",
+            "answer": "Kimi K2.5"
+          }
+        },
+        {
+          "success": true,
+          "data": {
+            "title": "Composer 2 Training Phases",
+            "content": "Composer 2 is trained in two main phases. The first phase is continued pretraining to improve the model's knowledge and latent coding ability. The second phase is large-scale reinforcement learning to improve end-to-end coding performance through stronger reasoning, accurate multi-step execution, and coherence on long-horizon realistic coding problems. The continued pretraining stage itself is divided into three phases: spending the bulk of compute at 32k token sequence length, followed by a shorter long-context extension phase to 256k sequence length, and finally a short SFT phase on targeted coding tasks.",
+            "info": "Composer 2 training involves continued pretraining followed by reinforcement learning.",
+            "question": "The continued pretraining phase of Composer 2 includes a bulk compute phase at 32k tokens, a long-context extension to 256k tokens, and a short SFT phase.",
+            "questionType": "true-false",
+            "answer": true,
+            "explanation": "The lesson describes continued pretraining as three stages: bulk compute at 32k tokens, a long-context extension to 256k tokens, and a short SFT phase."
+          }
+        },
+        {
+          "success": true,
+          "data": {
+            "title": "Code Modification Requirements in Benchmarks",
+            "content": "CursorBench is an internal evaluation suite comprising tasks drawn from actual coding sessions. Compared to public benchmarks, CursorBench tasks have less-specified task prompts and require substantially more extensive code modifications. CursorBench tasks necessitate a median of 181 lines changed compared to just 7–10 lines for SWE-bench Verified and SWE-bench Multilingual. This combination of broad execution scope and high intent ambiguity accurately reflects the intrinsic difficulty of real-world software engineering, where developers must frequently synthesize context from production logs, sparse user bug reports, and large existing codebases to derive a solution.",
+            "info": "Compare CursorBench's median code-change size with the much smaller SWE-bench figures.",
+            "question": "According to the comparison in the technical report, how many lines of code does the median CursorBench task require to change?",
+            "questionType": "multiple-choice",
+            "answer": 3,
+            "choices": [
+              390,
+              10,
+              7,
+              181
+            ],
+            "explanation": "The report explicitly states that CursorBench tasks necessitate a median of 181 lines changed compared to just 7-10 lines for SWE-bench Verified and Multilingual."
+          }
+        },
+        {
+          "success": true,
+          "data": {
+            "title": "Ordering Steps in the Composer 2 Training Pipeline",
+            "content": "The Composer 2 training pipeline begins with selecting a base model, where internal evaluations of coding knowledge, state tracking, and codebase perplexity guide the choice of Kimi K2.5. After the base model is selected, the model undergoes continued pretraining on a large code‑dominated data mix to specialize it in coding knowledge and capabilities. This pretraining phase is followed by large‑scale reinforcement learning (RL) that improves end‑to‑end coding performance through stronger reasoning, accurate multi‑step execution, and coherence on long‑horizon realistic coding problems. The correct order of these steps is therefore select base model, continue pretraining, then apply RL training.",
+            "info": "Continued pretraining provides the coding knowledge foundation that reinforcement learning builds upon.",
+            "question": "What is the correct order of steps in training Composer 2?",
+            "questionType": "flow-diagram",
+            "flowConfig": {
+              "nodes": [
+                {
+                  "id": "step-1",
+                  "label": "Select Base Model",
+                  "type": "start"
+                },
+                {
+                  "id": "step-2",
+                  "label": "Continued Pretraining",
+                  "type": "process"
+                },
+                {
+                  "id": "step-3",
+                  "label": "RL Training",
+                  "type": "process"
+                },
+                {
+                  "id": "step-4",
+                  "label": "Agent Execution",
+                  "type": "process"
+                },
+                {
+                  "id": "step-5",
+                  "label": "Evaluate on CursorBench",
+                  "type": "process"
+                },
+                {
+                  "id": "step-6",
+                  "label": "Specialized Coding Model",
+                  "type": "output"
+                }
+              ],
+              "edges": [
+                [
+                  "step-1",
+                  "step-2"
+                ],
+                [
+                  "step-2",
+                  "step-3"
+                ],
+                [
+                  "step-3",
+                  "step-4"
+                ],
+                [
+                  "step-4",
+                  "step-5"
+                ],
+                [
+                  "step-5",
+                  "step-6"
+                ]
+              ]
+            },
+            "choices": [
+              "Continued Pretraining",
+              "Select Base Model",
+              "RL Training"
+            ],
+            "slots": [
+              "First",
+              "Second",
+              "Third"
+            ],
+            "answer": [
+              1,
+              0,
+              2
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "Training Methodology: Continued Pretraining and Reinforcement Learning",
+      "lessons": [
+        {
+          "success": true,
+          "data": {
+            "title": "Optimizer Used During Continued Pretraining",
+            "content": "Composer 2 extends Kimi K2.5 with a continued pretraining stage on a large code-dominated data mix. The purpose of this stage is to provide a base model for the subsequent agentic RL training by specializing the model on coding knowledge and capabilities. We divide this stage into three phases: we spend the bulk of compute at 32k token sequence length, followed by a shorter long-context extension phase to 256k sequence length, and finally a short SFT phase on targeted coding tasks. Training was performed in MXFP8 on NVIDIA B300s using the AdamW optimizer. During training, we measure the evaluation loss on our internal codebase and see that the loss decreases log-linearly over the course of the training run.",
+            "info": "The optimizer is named in the same sentence as MXFP8 training on NVIDIA B300s.",
+            "question": "What optimizer is used during the continued pretraining phase of Composer 2?",
+            "questionType": "short-answer",
+            "answer": "AdamW"
+          }
+        },
+        {
+          "success": true,
+          "data": {
+            "title": "Overlong Rollout Masking Policy",
+            "content": "Our reinforcement learning pipeline operates in a highly asynchronous regime with independent training and rollout generation workers. Yu et al. proposed to mask out rollouts that exceed the maximum sequence length, and some subsequent works employed this masking. However, Liu et al. found that masking overlong rollouts shows limited effectiveness on long-tail reasoning tasks but increases the accuracy and clarity of responses in medium and short-length reasoning tasks, and Du et al. found that overlong masking caused output length to grow too quickly. We did not see benefits with overlong masking at small scale and opted not to mask rollouts that exceed the maximum sequence length. Our self-summary system also limits the occurrence of these cases in practice.",
+            "info": "Composer 2 does not mask rollouts that exceed the maximum sequence length.",
+            "question": "Composer 2 uses overlong masking for rollouts that exceed the maximum sequence length.",
+            "questionType": "true-false",
+            "answer": false,
+            "explanation": "The lesson states that Composer 2 did not see benefits from overlong masking at small scale and chose not to mask rollouts that exceed the maximum sequence length."
+          }
+        },
+        {
+          "success": true,
+          "data": {
+            "title": "MoE Backward Pass Precision Format",
+            "content": "Composer 2 training uses both MXFP8 and NVFP4 precision formats targeting NVIDIA Blackwell GPUs for block-scaled tensor-core matrix multiplications. For the MoE forward pass, a variant of NVFP4 is used where values are quantized from BF16 into FP4E2M1 using FP8E4M3 per-block scales with FP32 per-token scales. This per-token scaling approach proved more effective than the original NVFP4 format which uses FP32 per-tensor scales. For the MoE backward pass, the standard MXFP8 format is used with FP8E4M3 values and FP8E8M0 scales per 32-element block. This asymmetry between forward and backward pass is intentional because on the forward pass, it is necessary that the trainer match the inference for numerical stability using trainer NVFP4 to support fast inference, while the backward pass runs only on the training cluster where higher precision improves training stability.",
+            "info": "Focus on the precision format used for the backward pass, not the forward-pass NVFP4 variant.",
+            "question": "Which precision format is used for the MoE backward pass in Composer 2 training?",
+            "questionType": "multiple-choice",
+            "answer": 2,
+            "choices": [
+              "NVFP4 with FP32 per-tensor scales",
+              "BF16 activation with FP32 per-token scales",
+              "MXFP8 with FP8E4M3 values and FP8E8M0 scales per 32-element block",
+              "Standard FP32 precision"
+            ],
+            "explanation": "The MoE backward pass uses the standard MXFP8 format with FP8E4M3 values and FP8E8M0 scales per 32-element block. This is different from the forward pass which uses NVFP4 with per-token scaling. The asymmetry is intentional because the backward pass only runs on the training cluster where higher precision can improve training stability without affecting inference performance."
+          }
+        }
+      ]
+    },
+    {
+      "title": "Evaluation, Benchmarks, and Infrastructure",
+      "lessons": [
+        {
+          "success": true,
+          "data": {
+            "title": "CursorBench Performance Metrics",
+            "content": "Composer 2 achieves strong performance across multiple evaluation suites. On CursorBench, the internal evaluation suite, Composer 2 scores 61.3%. On public benchmarks, Composer 2 scores 73.7% on SWE-bench Multilingual and 61.7% on Terminal-Bench in the Cursor harness. These scores are competitive with frontier models despite being more cost-effective to serve. The results demonstrate consistent gains across both internal and external evaluation methods.",
+            "info": "Use the internal CursorBench result, not the public SWE-bench or Terminal-Bench scores.",
+            "question": "What is Composer 2's score on CursorBench?",
+            "questionType": "short-answer",
+            "answer": "61.3%"
+          }
+        },
+        {
+          "success": true,
+          "data": {
+            "title": "CursorBench Task Characteristics",
+            "content": "CursorBench tasks differ structurally from public evaluation sets in important ways. CursorBench tasks require substantially more extensive code modifications, with a median of 181 lines changed compared to just 7-10 lines for SWE-bench Verified and Multilingual. Additionally, CursorBench prompts are more under-specified, featuring a median description length of only 390 characters versus 1,185-3,055 characters for public benchmarks. This combination of broad execution scope and high intent ambiguity reflects real-world software engineering difficulty.",
+            "info": "CursorBench tasks require a median of 181 lines of code changes.",
+            "question": "The median CursorBench task requires substantially more lines of code changes compared to SWE-bench, with a median of 181 lines changed versus 7-10 lines.",
+            "questionType": "true-false",
+            "answer": true,
+            "explanation": "The lesson states that CursorBench tasks have a median of 181 lines changed, compared with 7-10 lines for SWE-bench Verified and Multilingual."
+          }
+        },
+        {
+          "success": false,
+          "data": {
+            "title": "Additional Evaluation Methods",
+            "content": "CursorBench is complemented by targeted evaluations covering other aspects of coding agent quality and behavior. These include an intent evaluation assessing how the model handles ambiguous prompts, an instruction-following evaluation measuring how well the model follows system prompts and user prompts, an eager editing evaluation testing how the model responds when it should avoid editing code, a code quality evaluation judging both code and comments, and an interruption evaluation quantifying how well the model handles mid-rollout interruptions and user feedback. These evaluations target important dimensions of agent behavior using data points that elicit them and rubrics to measure performance.",
+            "info": "Five complementary evaluations assess agent behavior beyond CursorBench.",
+            "question": "Which of the following is NOT one of the complementary evaluations used alongside CursorBench?",
+            "questionType": "multiple-choice",
+            "answer": 0,
+            "choices": [
+              "Code syntax validation evaluation",
+              "Instruction-following evaluation",
+              "Intent evaluation",
+              "Interruption evaluation"
+            ],
+            "explanation": "Code syntax validation evaluation is not listed among the five complementary evaluations. The actual evaluations are: intent evaluation, instruction-following evaluation, eager editing evaluation, code quality evaluation, and interruption evaluation."
+          },
+          "error": {
+            "validationType": "content",
+            "reason": "Multiple-choice questions must not use negation (NOT, EXCEPT). Ask for the correct/supported option instead.",
+            "details": [
+              "Question \"Which of the following is NOT one of the complementary evaluations used alongside CursorBench?\" uses negation wording."
+            ]
+          }
+        },
+        {
+          "success": true,
+          "data": {
+            "title": "CursorBench Evaluation Pipeline",
+            "content": "The CursorBench evaluation pipeline follows a systematic process to assess model performance. First, the codebase environment is initialized for each task, providing the isolated container and tools the agent needs. Second, the agent is run within the Cursor harness exactly as it would operate in production, generating rollouts of actions and responses. Third, after running multiple passes to reduce variance, accuracy is computed by aggregating results across all tasks. This pipeline ensures evaluations reflect real-world usage by using the same infrastructure and tools as the deployed model.",
+            "info": "CursorBench evaluations are run directly within Anyrun, the same infrastructure that supports the reinforcement learning pipeline.",
+            "question": "What is the correct order of steps in the CursorBench evaluation pipeline?",
+            "questionType": "flow-diagram",
+            "flowConfig": {
+              "nodes": [
+                {
+                  "id": "step-1",
+                  "label": "Initialize Codebase Environment",
+                  "type": "start"
+                },
+                {
+                  "id": "step-2",
+                  "label": "Initialize Task Prompt",
+                  "type": "process"
+                },
+                {
+                  "id": "step-3",
+                  "label": "Run Agent in Cursor Harness",
+                  "type": "process"
+                },
+                {
+                  "id": "step-4",
+                  "label": "Compute Accuracy Over Passes",
+                  "type": "process"
+                },
+                {
+                  "id": "step-5",
+                  "label": "Measure Efficiency Metrics",
+                  "type": "process"
+                },
+                {
+                  "id": "step-6",
+                  "label": "CursorBench Evaluation Results",
+                  "type": "output"
+                }
+              ],
+              "edges": [
+                [
+                  "step-1",
+                  "step-2"
+                ],
+                [
+                  "step-2",
+                  "step-3"
+                ],
+                [
+                  "step-3",
+                  "step-4"
+                ],
+                [
+                  "step-4",
+                  "step-5"
+                ],
+                [
+                  "step-5",
+                  "step-6"
+                ]
+              ]
+            },
+            "choices": [
+              "Initialize Codebase Environment",
+              "Run Agent in Cursor Harness",
+              "Compute Accuracy Over Passes"
+            ],
+            "slots": [
+              "First",
+              "Second",
+              "Third"
+            ],
+            "answer": [
+              0,
+              1,
+              2
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

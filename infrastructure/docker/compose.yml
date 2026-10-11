@@ -1,0 +1,78 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-eas}
+      POSTGRES_USER: ${POSTGRES_USER:-eas}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-only-change-this}
+    volumes:
+      - eas_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-eas} -d ${POSTGRES_DB:-eas}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  migrate:
+    build:
+      context: ../..
+    env_file:
+      - ../../.env
+    environment:
+      ENVIRONMENT: production
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-eas}:${POSTGRES_PASSWORD:-local-only-change-this}@db:5432/${POSTGRES_DB:-eas}
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    build:
+      context: ../..
+    env_file:
+      - ../../.env
+    environment:
+      ENVIRONMENT: development
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-eas}:${POSTGRES_PASSWORD:-local-only-change-this}@db:5432/${POSTGRES_DB:-eas}
+      STORAGE_BACKEND: filesystem
+      STORAGE_ROOT: /app/private-objects
+    volumes:
+      - eas_objects:/app/private-objects
+    ports:
+      - "${PORT:-8000}:${PORT:-8000}"
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:' + str(${PORT:-8000}) + '/v1/health')\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  worker:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile.worker
+      args:
+        PARSER_EXTRA: ${PARSER_EXTRA:-}
+    env_file:
+      - ../../.env
+    environment:
+      ENVIRONMENT: production
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-eas}:${POSTGRES_PASSWORD:-local-only-change-this}@db:5432/${POSTGRES_DB:-eas}
+      STORAGE_BACKEND: filesystem
+      STORAGE_ROOT: /app/private-objects
+    volumes:
+      - eas_objects:/app/private-objects
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+volumes:
+  eas_db:
+  eas_objects:

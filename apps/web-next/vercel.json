@@ -1,0 +1,20 @@
+{
+  "functions": {
+    "app/api/queues/run-generation-job/route.ts": {
+      "maxDuration": 800,
+      "experimentalTriggers": [
+        {
+          "type": "queue/v2beta",
+          "topic": "generate-course",
+          "retryAfterSeconds": 30
+        }
+      ]
+    },
+    "app/api/generate-course/route.ts": {
+      "maxDuration": 30
+    },
+    "app/api/**/route.ts": {
+      "maxDuration": 60
+    }
+  }
+}

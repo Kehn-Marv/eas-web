@@ -1,0 +1,267 @@
+@import "tailwindcss";
+
+/* ----------------------------------------------------------------------------
+   Design tokens
+   Everything in the app references these by name — no inline hex in components.
+---------------------------------------------------------------------------- */
+@theme {
+  /* fonts */
+  --font-sans: var(--font-fustat);
+  --font-mono: "SFMono-Regular", Consolas, monospace;
+
+  /* base surfaces (shadcn-compatible names so the Radix primitives resolve) */
+  --color-background: #ffffff;
+  --color-foreground: #171717;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f5f5f5;
+  --color-surface-subtle: #fafafa;
+  --color-border: #e5e5e5;
+  --color-border-strong: #d4d4d4;
+  --color-input: #e5e5e5;
+  --color-ring: #171717;
+  --color-accent: #f5f5f5;
+  --color-accent-foreground: #171717;
+  --color-muted: #f5f5f5;
+  --color-muted-foreground: #737373;
+
+  /* semantic state colors (correct / incorrect / info / hint / warning) */
+  --color-correct: #16a34a;
+  --color-correct-fg: #166534;
+  --color-correct-bg: #dcfce7;
+  --color-correct-border: #4ade80;
+
+  --color-incorrect: #dc2626;
+  --color-incorrect-fg: #991b1b;
+  --color-incorrect-bg: #fee2e2;
+  --color-incorrect-border: #f87171;
+
+  --color-info: #3b82f6;
+  --color-info-fg: #1e40af;
+  --color-info-bg: #eff6ff;
+  --color-info-border: #bfdbfe;
+
+  --color-hint: #db2777;
+  --color-hint-fg: #9d174d;
+  --color-hint-bg: #fdf2f8;
+  --color-hint-border: #fbcfe8;
+
+  --color-warning: #d97706;
+  --color-warning-fg: #92400e;
+  --color-warning-bg: #fffbeb;
+  --color-warning-border: #fde68a;
+
+  /* status-bar palette — borrowed from vercel-status (Geist 500s) */
+  --color-bar-good: #22c55e;
+  --color-bar-warn: #f59e0b;
+  --color-bar-bad: #ef4444;
+  --color-bar-track: #ededed;
+
+  /* brand rainbow */
+  --color-brand-1: #fb7372;
+  --color-brand-2: #ffc33e;
+  --color-brand-3: #51b9f3;
+  --color-brand-4: #2cbf76;
+
+  /* type scale — tighter tracking globally, tightens further as size grows */
+  --text-xs: 0.75rem;     --text-xs--line-height: 1rem;      --text-xs--letter-spacing: -0.01em;
+  --text-sm: 0.875rem;    --text-sm--line-height: 1.25rem;   --text-sm--letter-spacing: -0.011em;
+  --text-base: 1rem;      --text-base--line-height: 1.5rem;  --text-base--letter-spacing: -0.013em;
+  --text-lg: 1.125rem;    --text-lg--line-height: 1.6;       --text-lg--letter-spacing: -0.015em;
+  --text-xl: 1.25rem;     --text-xl--line-height: 1.4;       --text-xl--letter-spacing: -0.017em;
+  --text-2xl: 1.5rem;     --text-2xl--line-height: 1.25;     --text-2xl--letter-spacing: -0.024em;
+  --text-3xl: 1.875rem;   --text-3xl--line-height: 1.2;      --text-3xl--letter-spacing: -0.028em;
+  --text-4xl: 2.25rem;    --text-4xl--line-height: 1.12;     --text-4xl--letter-spacing: -0.034em;
+  --text-5xl: 3rem;       --text-5xl--line-height: 1.04;     --text-5xl--letter-spacing: -0.04em;
+  --text-6xl: 3.75rem;    --text-6xl--line-height: 1;        --text-6xl--letter-spacing: -0.045em;
+  --text-7xl: 4.5rem;     --text-7xl--line-height: 1;        --text-7xl--letter-spacing: -0.05em;
+
+  /* motion easings */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-smooth: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* runtime-only tokens (used by custom CSS + inline styles sourced from tokens) */
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+
+  /* brand gradient ring (used by .gradient-border / .gradient-border-button) */
+  --brand-ring: linear-gradient(
+    to right,
+    var(--color-brand-1) 0%,
+    var(--color-brand-2) 30%,
+    rgba(0, 0, 0, 0.45) 49%,
+    var(--color-brand-3) 66%,
+    var(--color-brand-4) 100%
+  );
+}
+
+/* Force light mode - ignore system dark mode preference */
+html {
+  color-scheme: light;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-fustat), sans-serif;
+  letter-spacing: -0.013em;
+}
+
+/* ----------------------------------------------------------------------------
+   Brand gradient border utilities
+---------------------------------------------------------------------------- */
+.gradient-border {
+  position: relative;
+  border: 0.5px solid transparent;
+  background:
+    linear-gradient(#fff, #fff) padding-box,
+    var(--brand-ring) border-box;
+  border-radius: 1rem;
+}
+
+/* dark-filled pill with a brand gradient ring — the dark fill is built in,
+   so DON'T add a Tailwind bg-* on top (it would override the gradient). */
+.gradient-border-button {
+  border: 0.5px solid transparent;
+  background:
+    linear-gradient(#171717, #171717) padding-box,
+    var(--brand-ring) border-box;
+  border-radius: 9999px;
+}
+
+.border-thin {
+  border-width: 0.5px;
+}
+
+/* ----------------------------------------------------------------------------
+   Focus-visible baseline (low specificity so components can override)
+---------------------------------------------------------------------------- */
+:where(a, button, [role="button"], input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
+/* ----------------------------------------------------------------------------
+   Keyframes (centralized — no per-component <style jsx> duplicates)
+---------------------------------------------------------------------------- */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+/* Animate the independent `scale` property (not `transform`) so it never
+   conflicts with translate-based centering (Tailwind `translate` on dialogs,
+   Radix `transform` on popovers/tooltips). This keeps overlays perfectly
+   centered the whole time — they just fade + scale in place. */
+@keyframes contentIn {
+  from { opacity: 0; scale: 0.97; }
+  to { opacity: 1; scale: 1; }
+}
+@keyframes popIn {
+  from { opacity: 0; scale: 0.98; }
+  to { opacity: 1; scale: 1; }
+}
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes toastIn {
+  from { transform: translateY(8px) scale(0.98); }
+  to { transform: translateY(0) scale(1); }
+}
+
+.animate-fadeIn,
+.animate-fade-in { animation: fadeIn var(--duration-base) var(--ease-standard) both; }
+.animate-fadeInUp { animation: fadeInUp var(--duration-slow) var(--ease-standard) both; }
+.animate-scaleIn { animation: scaleIn var(--duration-slow) var(--ease-out-soft) both; }
+.animate-overlayIn { animation: overlayIn var(--duration-base) var(--ease-standard); }
+.animate-contentIn { animation: contentIn var(--duration-base) var(--ease-out-soft); }
+.animate-popIn { animation: popIn var(--duration-fast) var(--ease-out-soft); }
+
+/* ----------------------------------------------------------------------------
+   Microinteraction utilities — consistent motion with a little "weight".
+   Transforms/opacity only. Disabled when the user prefers reduced motion.
+---------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  .interactive {
+    transition:
+      transform var(--duration-fast) var(--ease-out-soft),
+      box-shadow var(--duration-base) var(--ease-standard),
+      background-color var(--duration-base) var(--ease-standard),
+      border-color var(--duration-base) var(--ease-standard),
+      color var(--duration-base) var(--ease-standard);
+  }
+  .interactive:hover { transform: translateY(-1px); }
+  .interactive:active { transform: translateY(0) scale(0.98); }
+
+  .card-hover {
+    transition:
+      transform var(--duration-base) var(--ease-out-soft),
+      box-shadow var(--duration-base) var(--ease-standard),
+      border-color var(--duration-base) var(--ease-standard);
+  }
+  .card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px -8px rgb(0 0 0 / 0.12);
+  }
+
+  .animate-toast {
+    animation: toastIn var(--duration-base) var(--ease-out-soft) both;
+  }
+
+  .link-underline {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 0% 1px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    transition: background-size var(--duration-base) var(--ease-standard);
+  }
+  .link-underline:hover { background-size: 100% 1px; }
+
+  /* One-time landing entrance animations */
+  .rise {
+    animation: riseIn 0.5s var(--ease-out-soft) both;
+  }
+  .reveal {
+    opacity: 0;
+    transform: translateY(16px);
+    transition:
+      opacity 0.5s var(--ease-out-soft),
+      transform 0.5s var(--ease-out-soft);
+  }
+  .reveal.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ----------------------------------------------------------------------------
+   Reduced motion — global kill switch
+---------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

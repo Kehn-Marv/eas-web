@@ -1,0 +1,41 @@
+import * as React from "react";
+
+export function LogoSvg({
+  className = "",
+  ...props
+}: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 26 25"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      {...props}
+    >
+      <rect
+        x="4.04545"
+        y="4.07143"
+        width="7.27273"
+        height="16.8571"
+        rx="3.63636"
+        fill="white"
+      />
+      <rect
+        x="4.04545"
+        y="4.07143"
+        width="7.27273"
+        height="16.8571"
+        rx="3.63636"
+        stroke="black"
+      />
+      <rect
+        x="14.1818"
+        y="3.57143"
+        width="8.27273"
+        height="17.8571"
+        rx="4.13636"
+        fill="black"
+      />
+    </svg>
+  );
+}
