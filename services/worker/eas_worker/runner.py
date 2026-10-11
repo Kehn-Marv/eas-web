@@ -1,7 +1,9 @@
 import asyncio
+import json
 import logging
 import os
 import socket
+import traceback
 from collections.abc import Awaitable, Callable
 from uuid import UUID
 
@@ -135,7 +137,26 @@ class Worker:
                 return True
             await handler_task
         except Exception as exc:
-            # Job content and raw exception data are intentionally omitted from logs.
+            # Keep document contents, SQL text, exception messages, and secrets out of logs.
+            last_frame = traceback.extract_tb(exc.__traceback__)[-1] if exc.__traceback__ else None
+            original_error = getattr(exc, "orig", None)
+            safe_failure = {
+                "event": "eas.worker.job_failed",
+                "job_id": str(job_id),
+                "job_type": job_type,
+                "exception_type": type(exc).__name__,
+                "exception_module": type(exc).__module__,
+                "failure_function": last_frame.name if last_frame else None,
+                "failure_file": os.path.basename(last_frame.filename) if last_frame else None,
+                "failure_line": last_frame.lineno if last_frame else None,
+                "sqlstate": getattr(original_error, "sqlstate", None)
+                or getattr(original_error, "pgcode", None),
+                "driver_error_code": getattr(original_error, "code", None),
+                "attempt": attempt_count,
+            }
+            # Emit a content-free diagnostic on stdout, which Rumpty exposes in its
+            # runtime log view, so production failures can be diagnosed safely.
+            print(json.dumps(safe_failure, separators=(",", ":"), sort_keys=True), flush=True)
             async with self.sessions() as session:
                 async with session.begin():
                     await fail_job(session, job_id, self.worker_id, type(exc).__name__)
