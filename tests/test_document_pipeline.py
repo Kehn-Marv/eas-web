@@ -5,14 +5,16 @@ from types import ModuleType, SimpleNamespace
 
 import pymupdf
 import pytest
-from sqlalchemy import select
+from sqlalchemy import event, select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from packages.shared import models as _models  # noqa: F401
 from packages.shared.db import Base
 from packages.shared.models import (
     Document,
+    DocumentBlock,
     DocumentPage,
+    DocumentSection,
     DocumentStatus,
     LearningSession,
     PageStatus,
@@ -32,6 +34,108 @@ def make_pdf(path: Path, texts: list[str]) -> None:
             page.insert_text((72, 72), text, fontsize=12)
     document.save(path)
     document.close()
+
+
+@pytest.mark.asyncio
+async def test_index_assigns_existing_blocks_only_after_all_sections_exist():
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+
+    @event.listens_for(engine.sync_engine, "connect")
+    def enable_foreign_keys(dbapi_connection, _connection_record):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
+
+    async with engine.begin() as connection:
+        await connection.run_sync(Base.metadata.create_all)
+    sessions = async_sessionmaker(engine, expire_on_commit=False)
+    async with sessions() as db:
+        learner = LearningSession()
+        db.add(learner)
+        await db.flush()
+        document = Document(
+            session_id=learner.id,
+            filename="multiple-sections.pdf",
+            media_type="application/pdf",
+            content_hash="a" * 64,
+            object_key="documents/multiple-sections/original.pdf",
+            byte_size=128,
+            status=DocumentStatus.BUILDING_INDEX,
+            completeness_status="complete",
+        )
+        db.add(document)
+        await db.flush()
+        document_id = document.id
+        db.add_all(
+            [
+                DocumentBlock(
+                    document_id=document_id,
+                    page_number=1,
+                    block_index=0,
+                    source_type="heading",
+                    text="1. First section",
+                    content_hash="b" * 64,
+                ),
+                DocumentBlock(
+                    document_id=document_id,
+                    page_number=1,
+                    block_index=1,
+                    source_type="paragraph",
+                    text="The first section contains useful study material.",
+                    content_hash="c" * 64,
+                ),
+                DocumentBlock(
+                    document_id=document_id,
+                    page_number=1,
+                    block_index=2,
+                    source_type="heading",
+                    text="2. Second section",
+                    content_hash="d" * 64,
+                ),
+                DocumentBlock(
+                    document_id=document_id,
+                    page_number=1,
+                    block_index=3,
+                    source_type="paragraph",
+                    text="The second section contains more useful study material.",
+                    content_hash="e" * 64,
+                ),
+            ]
+        )
+        await db.commit()
+
+    await index_document({"document_id": str(document_id)}, engine, Settings())
+
+    async with sessions() as db:
+        document = await db.get(Document, document_id)
+        sections = list(
+            (
+                await db.scalars(
+                    select(DocumentSection)
+                    .where(DocumentSection.document_id == document_id)
+                    .order_by(DocumentSection.ordinal)
+                )
+            ).all()
+        )
+        blocks = list(
+            (
+                await db.scalars(
+                    select(DocumentBlock)
+                    .where(DocumentBlock.document_id == document_id)
+                    .order_by(DocumentBlock.block_index)
+                )
+            ).all()
+        )
+        assert document.status == DocumentStatus.READY
+        assert document.index_status == "ready"
+        assert len(sections) == 2
+        assert [block.section_id for block in blocks] == [
+            sections[0].id,
+            sections[0].id,
+            sections[1].id,
+            sections[1].id,
+        ]
+    await engine.dispose()
 
 
 def test_parser_preserves_typographic_heading_signals(tmp_path):
