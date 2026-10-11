@@ -57,9 +57,16 @@ class FilesystemStorage:
 class S3Storage:
     def __init__(self, bucket: str, region: str | None = None, endpoint_url: str | None = None):
         import boto3
+        from botocore.config import Config
 
         self.bucket = bucket
-        self.client = boto3.client("s3", region_name=region, endpoint_url=endpoint_url)
+        options: dict[str, object] = {}
+        if endpoint_url:
+            # RumptyCloud and other S3-compatible services require path-style addressing.
+            options["config"] = Config(s3={"addressing_style": "path"})
+        self.client = boto3.client(
+            "s3", region_name=region, endpoint_url=endpoint_url, **options
+        )
 
     async def put_file(self, key: str, source: Path, content_type: str) -> None:
         safe_key = _validate_key(key)

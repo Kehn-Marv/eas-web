@@ -10,6 +10,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import boto3
+from botocore.config import Config
 from sqlalchemy.engine import make_url
 
 logger = logging.getLogger("eas.backup")
@@ -62,7 +63,12 @@ def backup_postgres() -> str:
         ]
         try:
             subprocess.run(command, env=process_env, check=True, capture_output=True)
-            client = boto3.client("s3", region_name=region, endpoint_url=endpoint_url)
+            options = {}
+            if endpoint_url:
+                options["config"] = Config(s3={"addressing_style": "path"})
+            client = boto3.client(
+                "s3", region_name=region, endpoint_url=endpoint_url, **options
+            )
             client.upload_file(str(dump_path), bucket, key)
         except Exception as exc:
             # Do not log subprocess output, connection strings, or exception messages.
