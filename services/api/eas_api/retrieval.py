@@ -2,6 +2,7 @@
 
 import hashlib
 import math
+import os
 import unicodedata
 from uuid import UUID, uuid4
 
@@ -197,7 +198,12 @@ async def search_session(request: Request, session_id: UUID, body: SearchRequest
         if embedding_enabled(settings):
             try:
                 query_vector = (await OpenAICompatibleEmbeddings(settings).embed_texts([query]))[0]
-                if request.app.state.db_engine.dialect.name == "postgresql":
+                pgvector_enabled = (
+                    request.app.state.db_engine.dialect.name == "postgresql"
+                    and os.getenv("EAS_PGVECTOR_ENABLED", "false").lower()
+                    in {"1", "true", "yes"}
+                )
+                if pgvector_enabled:
                     distance = DocumentEmbedding.embedding.cosine_distance(query_vector)
                     vector_rows = (
                         await db.execute(

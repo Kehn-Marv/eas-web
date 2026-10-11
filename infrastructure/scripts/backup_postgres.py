@@ -40,7 +40,7 @@ def backup_postgres() -> str:
         process_env["PGUSER"] = url.username
     if url.password:
         process_env["PGPASSWORD"] = url.password
-    sslmode = url.query.get("sslmode")
+    sslmode = url.query.get("sslmode") or url.query.get("ssl")
     if isinstance(sslmode, tuple):
         sslmode = sslmode[-1]
     if sslmode:

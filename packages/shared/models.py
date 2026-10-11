@@ -1,3 +1,4 @@
+import os
 from datetime import UTC, datetime
 from enum import StrEnum
 from uuid import UUID, uuid4
@@ -20,20 +21,23 @@ from packages.shared.db import Base
 
 
 class EmbeddingVector(TypeDecorator):
-    """JSON in SQLite development; a fixed-dimension pgvector column in PostgreSQL."""
+    """JSON by default; pgvector is opt-in for databases that provide the extension."""
 
     impl = JSON
     cache_ok = True
-    from pgvector.sqlalchemy import Vector as _Vector
+    if os.getenv("EAS_PGVECTOR_ENABLED", "false").lower() in {"1", "true", "yes"}:
+        from pgvector.sqlalchemy import Vector as _Vector
 
-    comparator_factory = _Vector.comparator_factory
+        comparator_factory = _Vector.comparator_factory
 
     def __init__(self, dimensions: int = 384):
         super().__init__()
         self.dimensions = dimensions
 
     def load_dialect_impl(self, dialect):
-        if dialect.name == "postgresql":
+        if dialect.name == "postgresql" and os.getenv(
+            "EAS_PGVECTOR_ENABLED", "false"
+        ).lower() in {"1", "true", "yes"}:
             from pgvector.sqlalchemy import Vector
 
             return dialect.type_descriptor(Vector(self.dimensions))

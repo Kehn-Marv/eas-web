@@ -134,7 +134,9 @@ async def lifespan(app: FastAPI):
     )
     if settings.environment == "development":
         async with engine.begin() as connection:
-            if engine.dialect.name == "postgresql":
+            if engine.dialect.name == "postgresql" and os.getenv(
+                "EAS_PGVECTOR_ENABLED", "false"
+            ).lower() in {"1", "true", "yes"}:
                 await connection.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
             await connection.run_sync(Base.metadata.create_all)
     try:

@@ -20,7 +20,7 @@ def _pg_env(url_text: str) -> tuple[dict[str, str], str, str, str]:
         env["PGUSER"] = url.username
     if url.password:
         env["PGPASSWORD"] = url.password
-    sslmode = url.query.get("sslmode")
+    sslmode = url.query.get("sslmode") or url.query.get("ssl")
     if isinstance(sslmode, tuple):
         sslmode = sslmode[-1]
     if sslmode:
@@ -74,22 +74,23 @@ def restore_and_validate(dump: Path) -> None:
     )
     if check.stdout.strip() != "t|t|t|t":
         raise RuntimeError("Restored database is missing one or more required EAS tables")
-    extension = subprocess.run(
-        [
-            "psql",
-            "--no-psqlrc",
-            "--tuples-only",
-            "--no-align",
-            "-c",
-            "SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname='vector');",
-        ],
-        env=target_env,
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    if extension.stdout.strip() != "t":
-        raise RuntimeError("Restored database does not have the pgvector extension")
+    if os.getenv("EAS_PGVECTOR_ENABLED", "false").lower() in {"1", "true", "yes"}:
+        extension = subprocess.run(
+            [
+                "psql",
+                "--no-psqlrc",
+                "--tuples-only",
+                "--no-align",
+                "-c",
+                "SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname='vector');",
+            ],
+            env=target_env,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        if extension.stdout.strip() != "t":
+            raise RuntimeError("Restored database does not have the pgvector extension")
     del source_env
     print(f"Restore validation passed for isolated database {target_host}/{target_db}.")
 

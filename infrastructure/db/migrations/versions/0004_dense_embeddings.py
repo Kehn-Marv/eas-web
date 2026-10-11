@@ -1,5 +1,6 @@
-"""Add pgvector embeddings while keeping SQLite development support."""
+"""Add embedding storage; use pgvector only when explicitly enabled."""
 
+import os
 import sqlalchemy as sa
 from alembic import op
 
@@ -14,12 +15,18 @@ def upgrade():
     inspector = sa.inspect(bind)
     if inspector.has_table("document_embeddings"):
         return
-    if bind.dialect.name == "postgresql":
+    use_pgvector = (
+        bind.dialect.name == "postgresql"
+        and os.getenv("EAS_PGVECTOR_ENABLED", "false").lower() in {"1", "true", "yes"}
+    )
+    if use_pgvector:
         from pgvector.sqlalchemy import Vector
 
         op.execute("CREATE EXTENSION IF NOT EXISTS vector")
         vector_type = Vector(384)
     else:
+        # Plain JSON keeps managed PostgreSQL deployments working when the
+        # operator does not offer pgvector. Retrieval can still use lexical search.
         vector_type = sa.JSON()
     op.create_table(
         "document_embeddings",
