@@ -17,7 +17,7 @@ COPY pyproject.toml README.md ./
 COPY services ./services
 COPY packages ./packages
 COPY --from=frontend-build /app/apps/web-next/out/ ./apps/web/
-RUN pip install --no-cache-dir --timeout 120 --retries 5 .
+RUN pip install --no-cache-dir --timeout 600 --retries 10 .
 COPY alembic.ini ./
 COPY infrastructure/db/migrations ./infrastructure/db/migrations
 COPY infrastructure/scripts ./infrastructure/scripts
