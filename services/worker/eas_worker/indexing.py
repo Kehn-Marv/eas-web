@@ -204,9 +204,6 @@ async def index_document(
             current_section.end_page = max(current_section.end_page, block.page_number)
             section_by_block[block.id] = current_section.id
 
-        for block in blocks:
-            block.section_id = section_by_block.get(block.id)
-
         # Figure crops have page-level provenance but no bounding boxes, so attach them to
         # the most recently started section covering that page. Preserve figure-only pages.
         asset_sections: dict[UUID, UUID] = {}
@@ -247,7 +244,6 @@ async def index_document(
                         section_id=section.id,
                     )
                 )
-            asset.section_id = section.id
             asset_sections[asset.id] = section.id
 
         # A root node anchors the persisted document → section → page → block → chunk tree.
@@ -264,6 +260,12 @@ async def index_document(
         for section in sections:
             db.add(section)
             await db.flush()
+        # All referenced sections must exist before PostgreSQL flushes block or asset
+        # updates; its immediate foreign keys reject references to later section rows.
+        for block in blocks:
+            block.section_id = section_by_block.get(block.id)
+        for asset in assets:
+            asset.section_id = asset_sections.get(asset.id)
         db.add(root)
         await db.flush()
         for node, section in zip(section_nodes, sections, strict=True):
