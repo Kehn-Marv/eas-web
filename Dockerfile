@@ -22,4 +22,4 @@ COPY alembic.ini ./
 COPY infrastructure/db/migrations ./infrastructure/db/migrations
 COPY infrastructure/scripts ./infrastructure/scripts
 EXPOSE 8000
-CMD ["sh", "-c", "alembic upgrade head && exec uvicorn services.api.eas_api.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["sh", "-c", "alembic upgrade head && if [ \"${EAS_SERVICE:-api}\" = \"worker\" ]; then exec python -m services.worker.eas_worker.web_runner; else exec uvicorn services.api.eas_api.main:app --host 0.0.0.0 --port ${PORT:-8000}; fi"]
