@@ -70,14 +70,22 @@ class S3Storage:
 
     async def put_file(self, key: str, source: Path, content_type: str) -> None:
         safe_key = _validate_key(key)
-        await asyncio.to_thread(
-            self.client.upload_file,
-            str(source),
-            self.bucket,
-            safe_key,
-            # Rumpty S3-compatible storage may reject AWS SSE headers; use the bucket policy.
-            ExtraArgs={"ContentType": content_type},
-        )
+
+        def put_single_object() -> None:
+            # Boto3's managed upload switches to multipart above 8 MiB. Rumpty's
+            # bucket key accepts PutObject but rejects CreateMultipartUpload, so
+            # use one request. EAS caps uploads far below S3's 5 GiB single-PUT
+            # limit.
+            with source.open("rb") as body:
+                self.client.put_object(
+                    Bucket=self.bucket,
+                    Key=safe_key,
+                    Body=body,
+                    ContentLength=source.stat().st_size,
+                    ContentType=content_type,
+                )
+
+        await asyncio.to_thread(put_single_object)
 
     async def get_file(self, key: str, destination: Path) -> None:
         await asyncio.to_thread(
@@ -98,3 +106,4 @@ def make_storage(
     if backend == "s3" and bucket:
         return S3Storage(bucket, region, endpoint_url)
     raise ValueError("STORAGE_BACKEND must be filesystem or s3 (with S3_BUCKET configured)")
+
