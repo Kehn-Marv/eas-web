@@ -75,7 +75,8 @@ class S3Storage:
             str(source),
             self.bucket,
             safe_key,
-            ExtraArgs={"ContentType": content_type, "ServerSideEncryption": "AES256"},
+            # Rumpty S3-compatible storage may reject AWS SSE headers; use the bucket policy.
+            ExtraArgs={"ContentType": content_type},
         )
 
     async def get_file(self, key: str, destination: Path) -> None:
