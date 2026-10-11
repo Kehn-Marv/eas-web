@@ -138,7 +138,13 @@ class Worker:
             await handler_task
         except Exception as exc:
             # Keep document contents, SQL text, exception messages, and secrets out of logs.
-            last_frame = traceback.extract_tb(exc.__traceback__)[-1] if exc.__traceback__ else None
+            frames = traceback.extract_tb(exc.__traceback__) if exc.__traceback__ else []
+            app_frames = [
+                frame
+                for frame in frames
+                if "services/worker/eas_worker" in frame.filename.replace("\\", "/")
+            ]
+            last_frame = app_frames[-1] if app_frames else (frames[-1] if frames else None)
             original_error = getattr(exc, "orig", None)
             safe_failure = {
                 "event": "eas.worker.job_failed",
@@ -152,6 +158,10 @@ class Worker:
                 "sqlstate": getattr(original_error, "sqlstate", None)
                 or getattr(original_error, "pgcode", None),
                 "driver_error_code": getattr(original_error, "code", None),
+                "constraint_name": getattr(original_error, "constraint_name", None),
+                "table_name": getattr(original_error, "table_name", None),
+                "column_name": getattr(original_error, "column_name", None),
+                "schema_name": getattr(original_error, "schema_name", None),
                 "attempt": attempt_count,
             }
             # Emit a content-free diagnostic on stdout, which Rumpty exposes in its
