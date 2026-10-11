@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Request, Response
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import delete, select
 
 from packages.shared.db import make_session_factory
@@ -41,7 +41,15 @@ class CourseProgressUpdate(BaseModel):
 
 class LessonAnswer(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    answer: str | float | bool | list[str] | list[int] = Field(max_length=4000)
+    answer: str | float | bool | list[str] | list[int]
+
+    @field_validator("answer")
+    @classmethod
+    def bound_answer_length(cls, answer: str | float | bool | list[str] | list[int]):
+        # Length limits apply to text and ordered answer arrays, not numeric answers.
+        if isinstance(answer, (str, list)) and len(answer) > 4000:
+            raise ValueError("Answer must contain at most 4000 characters or items.")
+        return answer
 
 
 def _owner_id(request: Request) -> UUID:
@@ -557,3 +565,4 @@ async def answer_shared_lesson(request: Request, share_token: str, lesson_id: UU
             answer = "True" if answer else "False"
         correctness = evaluate_answer(lesson.check_type, lesson.expected_answer, answer)
         return {"correctness": correctness, "answer": lesson.lesson.get("answer"), "explanation": lesson.lesson.get("explanation", "")}
+
