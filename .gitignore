@@ -9,8 +9,6 @@ data/
 **/data/
 data-eas-local/
 **/data-eas-local/
-multi-user/
-**/multi-user/
 apps/eas/docs/
 design-qa.md
 site/
