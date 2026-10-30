@@ -374,11 +374,11 @@ EAS uses four cooperating containers (web/API, Redis, PocketBase, and the sandbo
 
 #### 1. Publish the container images
 
-The GitHub Actions workflow at `.github/workflows/publish-eas-images.yml` builds and publishes the EAS and sandbox-runner images to GitHub Container Registry when `main` changes. It also publishes a `latest` tag and an immutable commit-SHA tag. Keep the packages public if the VM will pull them without registry credentials. The Docker build context excludes `.env` files, SQLite files, and `data-eas-local` so local state is not sent to the builder.
+The GitHub Actions workflow at `.github/workflows/publish-eas-images.yml` builds and publishes the EAS and sandbox-runner images to GitHub Container Registry when `main` changes. It publishes a `latest` tag and an immutable commit-SHA tag. Keep the packages public if the VM will pull them without registry credentials. The Docker build context excludes `.env` files, SQLite files, and `data-eas-local` so local state is not sent to the builder.
 
 #### 2. Create the VM and persistent volume
 
-In Rumpty, switch to the `EAS Production` workspace, create an Ubuntu 24.04 VM, add a workspace SSH key, and attach a formatted volume in the same region. The Power size (2 vCPU, 4 GB RAM, 80 GB VM disk) is the smallest current console tier with useful headroom for the full parser image; the VM price shown in the console is the billing source of truth. A separate 50 GiB volume is about ₦4,725/month at the published ₦94.50/GiB/month rate. Attach it before first boot so Rumpty mounts it at `/mnt/rumpty/<volume-id>` and retains it independently of the VM.
+In Rumpty, switch to the `EAS Production` workspace, create an Ubuntu 24.04 VM, add a workspace SSH key, and attach a formatted volume in the same region. The Ultra size (4 vCPU, 8 GB RAM, 160 GB VM disk) is the largest currently listed VM tier and is the safer starting point for CPU-based document parsing. MinerU's current resource guidance lists 8 GB as a minimum for its standard/advanced CPU path; higher-throughput parsing benefits from more memory than this VM offers. Limit parsing concurrency and test representative documents before opening the service to users. The VM price shown in the console is the billing source of truth. A separate 50 GiB volume is $2.50/month at Rumpty's published $0.05/GiB/month rate, with any currency conversion shown in the console. Attach it before first boot so Rumpty mounts it at `/mnt/rumpty/<volume-id>` and retains it independently of the VM.
 
 #### 3. Install Docker and check out the public repository
 
@@ -398,8 +398,8 @@ Create `/etc/eas/eas.env` with the actual volume ID and image names:
 EAS_DATA_HOST=/mnt/rumpty/<volume-id>/eas-data
 EAS_DOCKER_FRONTEND_HOST_PORT=8080
 EAS_ALLOW_RUNTIME_PARSER_MAINTENANCE=false
-EAS_IMAGE=ghcr.io/kehn-marv/eas-web/eas:latest
-EAS_RUNNER_IMAGE=ghcr.io/kehn-marv/eas-web/sandbox-runner:latest
+EAS_IMAGE=ghcr.io/kehn-marv/eas-web:latest
+EAS_RUNNER_IMAGE=ghcr.io/kehn-marv/eas-web-runner:latest
 ```
 
 Then prepare the mount directory and deploy:
@@ -411,7 +411,7 @@ cd /opt/eas-web/apps/eas
 sudo bash scripts/rumpty-deploy.sh
 ```
 
-The deploy script pulls the published images and starts Compose without building on the VM. Container restart policies bring the services back after a VM reboot. Application state, Redis data, PocketBase data, workspace files, and parser caches all live under `EAS_DATA_HOST`. Provider credentials are configured in EAS settings and must not be put in this environment file.
+The deploy script pulls the published images and starts Compose without building on the VM. Container restart policies bring the services back after a VM reboot. Application state, PocketBase data, workspace files, and parser caches live under `EAS_DATA_HOST`; Redis uses a small Docker-managed volume on the VM disk because it only holds coordination state. Provider credentials are configured in EAS settings and must not be put in this environment file.
 
 Only the web frontend is published on VM port `8080`. FastAPI and the PocketBase admin port bind to VM loopback and are not publicly exposed. Next.js forwards same-origin API and WebSocket requests to FastAPI inside the EAS container.
 
@@ -424,7 +424,7 @@ cd /opt/eas-web/apps/eas
 sudo bash scripts/warm_parser_models.sh
 ```
 
-This downloads Docling models and MinerU's pipeline and VLM models. It may take several minutes and several gigabytes of storage. Reboots and image updates reuse the cache. MinerU is pinned below 4.0 because the current EAS adapter targets the 3.x `mineru` CLI; its newer 4.x `mineru-kit` CLI is not compatible. MinerU 3.x is installed with its `core` extra, not `all`, to avoid the optional Linux vLLM stack on a CPU VM.
+This downloads Docling models and MinerU's pipeline and VLM models. It may take several minutes and several gigabytes of storage. Reboots and image updates reuse the cache. MinerU is pinned below 4.0 because the current EAS adapter targets the 3.x `mineru` CLI; its newer 4.x `mineru-kit` CLI is not compatible. MinerU 3.x is installed with its `core` extra, not `all`, to avoid the optional Linux vLLM stack on a CPU VM. Pre-downloading model files makes the engines ready without first-use downloads; it does not guarantee every model will fit in memory for every document size. Keep heavy parsing concurrency low and check readiness before selecting an engine.
 
 #### 5. Publish the public URL and verify
 

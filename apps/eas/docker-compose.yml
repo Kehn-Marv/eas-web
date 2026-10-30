@@ -24,15 +24,15 @@
 # ============================================
 
 services:
-  # Redis is internal-only runtime coordination state. AOF keeps unflushed
-  # event/command streams available across a sidecar restart; business data
-  # remains in SQLite/PocketBase.
+# Redis is internal-only coordination state. Its small AOF lives in a Docker
+  # named volume on the VM disk; business data and user files remain on the
+  # separately mounted EAS volume.
   redis:
     image: redis:7.4-alpine
     restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec"]
     volumes:
-      - "${EAS_DATA_HOST:-./data-eas-local}/redis:/data"
+      - redis-data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -221,3 +221,6 @@ services:
 networks:
   eas-network:
     driver: bridge
+
+volumes:
+  redis-data:
