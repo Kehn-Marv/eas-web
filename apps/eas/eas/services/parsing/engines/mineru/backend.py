@@ -39,7 +39,7 @@ _LOCAL_FAILURE_MESSAGES: dict[LocalParseReason, str] = {
     LocalParseReason.CANCELLED: "Local MinerU parsing was cancelled: {detail}",
     LocalParseReason.CLI_MISSING: (
         "Local MinerU parsing failed. Ensure MinerU is installed "
-        "(`pip install -U 'mineru[all]>=3.4.5'`) or switch to cloud mode in "
+        "(`pip install -U 'mineru[core]>=3.4.5,<4.0.0'`) or switch to cloud mode in "
         "Settings → MinerU."
     ),
     LocalParseReason.INPUT_MISSING: (
@@ -52,7 +52,7 @@ _LOCAL_FAILURE_MESSAGES: dict[LocalParseReason, str] = {
     ),
     LocalParseReason.LEGACY_CLI_INPUT: (
         "The legacy magic-pdf CLI only accepts PDF files. Install the current "
-        "MinerU CLI (`pip install -U 'mineru[all]>=3.4.5'`) to parse images, "
+        "MinerU CLI (`pip install -U 'mineru[core]>=3.4.5,<4.0.0'`) to parse images, "
         "DOCX, PPTX, or XLSX."
     ),
     LocalParseReason.NONZERO_EXIT: (
@@ -218,7 +218,7 @@ def _parse_local(
     ):
         raise MinerUError(
             "The legacy magic-pdf CLI only accepts PDF files. Install the current "
-            "MinerU CLI (`pip install -U 'mineru[all]>=3.4.5'`) to parse images, "
+            "MinerU CLI (`pip install -U 'mineru[core]>=3.4.5,<4.0.0'`) to parse images, "
             "DOCX, PPTX, or XLSX.",
             code=str(LocalParseReason.LEGACY_CLI_INPUT),
         )

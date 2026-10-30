@@ -370,47 +370,84 @@ docker compose logs -f eas
 
 ### Deploying to Rumpty Cloud
 
-[Rumpty Cloud](https://rumpty.com) provides managed cloud hosting for containerized applications. The following outlines the deployment process for EAS on Rumpty.
+EAS uses four cooperating containers (web/API, Redis, PocketBase, and the sandbox runner). Rumpty app deployments route one port, so deploy this Compose stack on an Ubuntu VM in the **EAS Production** workspace. Do not create a Rumpty app deployment for this Compose file.
 
-**Preparing the project:**
+#### 1. Publish the container images
 
-1. Ensure the `docker-compose.yml` and `Dockerfile` are both present under `apps/eas/`.
-2. Verify the application builds cleanly:
-   ```bash
-   cd apps/eas
-   docker compose build
-   ```
-3. Confirm all tests pass before deploying:
-   ```bash
-   pytest
-   cd web && npm run check:fast && cd ..
-   ```
+The GitHub Actions workflow at `.github/workflows/publish-eas-images.yml` builds and publishes the EAS and sandbox-runner images to GitHub Container Registry when `main` changes. It also publishes a `latest` tag and an immutable commit-SHA tag. Keep the packages public if the VM will pull them without registry credentials. The Docker build context excludes `.env` files, SQLite files, and `data-eas-local` so local state is not sent to the builder.
 
-**Deployment steps:**
+#### 2. Create the VM and persistent volume
 
-1. **Create a Rumpty Cloud account** at [rumpty.com](https://rumpty.com) and set up a new project.
+In Rumpty, switch to the `EAS Production` workspace, create an Ubuntu 24.04 VM, add a workspace SSH key, and attach a formatted volume in the same region. The Power size (2 vCPU, 4 GB RAM, 80 GB VM disk) is the smallest current console tier with useful headroom for the full parser image; the VM price shown in the console is the billing source of truth. A separate 50 GiB volume is about ₦4,725/month at the published ₦94.50/GiB/month rate. Attach it before first boot so Rumpty mounts it at `/mnt/rumpty/<volume-id>` and retains it independently of the VM.
 
-2. **Connect the repository.** Link the GitHub repository containing the EAS codebase to your Rumpty project. Rumpty detects the `docker-compose.yml` and configures the service topology automatically.
+#### 3. Install Docker and check out the public repository
 
-3. **Configure environment variables.** In the Rumpty project dashboard, add the following environment variables:
-   - `HOST_PORT_BACKEND`: `8001`
-   - `HOST_PORT_FRONTEND`: `3782` (or the port Rumpty assigns)
-   - `HOST_PORT_POCKETBASE`: `8090`
-   - Any LLM provider API keys (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, etc.)
-   - `TZ`: your preferred timezone
+Connect with SSH, then run:
 
-4. **Configure persistent storage.** Rumpty provides managed volumes. Map the following:
-   - `./data-eas-local` to a persistent volume for application data (sessions, settings, vector indices)
-   - `./data-eas-local/redis` to a persistent volume for Redis AOF data
-   - `./data-eas-local/pocketbase` to a persistent volume for PocketBase auth data
+```bash
+sudo apt-get update
+sudo apt-get install -y docker.io docker-compose-v2 git python3
+sudo systemctl enable --now docker
+sudo git clone --depth 1 --branch main https://github.com/Kehn-Marv/eas-web.git /opt/eas-web
+sudo mkdir -p /etc/eas
+```
 
-5. **Deploy.** Trigger a deployment from the Rumpty dashboard or via their CLI. Rumpty builds the Docker images, provisions the network, and starts all four services (redis, pocketbase, eas, sandbox-runner) with their declared health checks.
+Create `/etc/eas/eas.env` with the actual volume ID and image names:
 
-6. **Verify.** Once deployment completes, visit the assigned URL to confirm the landing page loads. Check the health endpoint at `<your-rumpty-url>:8001/health/ready`.
+```dotenv
+EAS_DATA_HOST=/mnt/rumpty/<volume-id>/eas-data
+EAS_DOCKER_FRONTEND_HOST_PORT=8080
+EAS_ALLOW_RUNTIME_PARSER_MAINTENANCE=false
+EAS_IMAGE=ghcr.io/kehn-marv/eas-web/eas:latest
+EAS_RUNNER_IMAGE=ghcr.io/kehn-marv/eas-web/sandbox-runner:latest
+```
 
-7. **Set up a custom domain (optional).** In the Rumpty project settings, configure a custom domain and point your DNS records to Rumpty's provided CNAME or IP address.
+Then prepare the mount directory and deploy:
 
-> This section covers the general process. During actual deployment, the deploying agent will update this documentation with specific Rumpty CLI commands, exact volume mount paths, and any platform-specific configuration details encountered.
+```bash
+sudo mkdir -p /mnt/rumpty/<volume-id>/eas-data
+sudo chmod 600 /etc/eas/eas.env
+cd /opt/eas-web/apps/eas
+sudo bash scripts/rumpty-deploy.sh
+```
+
+The deploy script pulls the published images and starts Compose without building on the VM. Container restart policies bring the services back after a VM reboot. Application state, Redis data, PocketBase data, workspace files, and parser caches all live under `EAS_DATA_HOST`. Provider credentials are configured in EAS settings and must not be put in this environment file.
+
+Only the web frontend is published on VM port `8080`. FastAPI and the PocketBase admin port bind to VM loopback and are not publicly exposed. Next.js forwards same-origin API and WebSocket requests to FastAPI inside the EAS container.
+
+#### 4. Warm parser models once
+
+The production image includes the supported parser packages, including MinerU 3.x. Model weights are separate from Python packages, so download them once into the attached volume after the containers are healthy:
+
+```bash
+cd /opt/eas-web/apps/eas
+sudo bash scripts/warm_parser_models.sh
+```
+
+This downloads Docling models and MinerU's pipeline and VLM models. It may take several minutes and several gigabytes of storage. Reboots and image updates reuse the cache. MinerU is pinned below 4.0 because the current EAS adapter targets the 3.x `mineru` CLI; its newer 4.x `mineru-kit` CLI is not compatible. MinerU 3.x is installed with its `core` extra, not `all`, to avoid the optional Linux vLLM stack on a CPU VM.
+
+#### 5. Publish the public URL and verify
+
+The VM service must listen on `0.0.0.0:8080`. After deployment, create its public HTTPS route with Rumpty's CLI:
+
+```bash
+rumpty login
+rumpty expose <vm-name> --ws eas-production-01a18d6f --port 8080 --name eas-web
+rumpty vm expose ls <vm-name> --ws eas-production-01a18d6f
+```
+
+Open the HTTPS URL shown by the last command. Verify the web page and upload flow there. Check API readiness from the VM itself with:
+
+```bash
+cd /opt/eas-web/apps/eas
+sudo bash -c 'source /etc/eas/eas.env; python3 scripts/docker_compose.py exec -T eas curl -fsS http://127.0.0.1:8001/health/ready'
+```
+
+The public route is on port 8080; do not append `:8001` to the public URL. Rumpty does not automatically build and run this multi-service Compose file as a single app deployment.
+
+#### Backups
+
+The attached volume survives a VM restart or deletion, but it is not an off-site backup. Create periodic Rumpty snapshots or copy an encrypted archive to a private Rumpty bucket before treating the deployment as production-ready. Test restoring that backup to a separate volume and VM before relying on it. Keep the backup access key in the VM's secret store, not in Git or this guide.
 
 ### Health Checks and Monitoring
 

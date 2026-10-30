@@ -1469,7 +1469,7 @@ async def start_mineru_models_download(payload: MinerUModelDownloadPayload):
         else:
             message = (
                 "mineru-models-download not found on the server PATH. Install "
-                'current MinerU first (uv pip install -U "mineru[all]>=3.4.5") or set '
+                'current MinerU first (uv pip install -U "mineru[core]>=3.4.5,<4.0.0") or set '
                 "the CLI path."
             )
         return {"ok": False, "message": message}
@@ -1533,7 +1533,7 @@ async def test_mineru_connection(payload: MinerUSettingsUpdate):
                 "ok": False,
                 "message": (
                     "MinerU CLI not found on the server PATH. Install it "
-                    '(uv pip install -U "mineru[all]>=3.4.5"), set an explicit CLI path, '
+                    '(uv pip install -U "mineru[core]>=3.4.5,<4.0.0"), set an explicit CLI path, '
                     "or switch to cloud mode."
                 ),
             }
@@ -1550,7 +1550,7 @@ async def test_mineru_connection(payload: MinerUSettingsUpdate):
                 "message": (
                     f"Local MinerU CLI reported {detail}. EAS needs MinerU >= "
                     f"{MIN_MINERU_VERSION}; upgrade with "
-                    f"`pip install -U 'mineru[all]>={MIN_MINERU_VERSION}'`."
+                    f"`pip install -U 'mineru[core]>={MIN_MINERU_VERSION},<4.0.0'`."
                 ),
             }
         return {

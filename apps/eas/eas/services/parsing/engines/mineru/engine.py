@@ -25,9 +25,9 @@ class MinerUParser:
 
     @classmethod
     def is_available(cls) -> bool:
-        # MinerU is an external CLI (local) or hosted API (cloud); the adapter
-        # has no hard Python import. It is always "available" — readiness gates
-        # whether a parse can actually run.
+        # The adapter has no hard import so cloud mode still works without the
+        # local package. Readiness gates whether the local CLI/models or cloud
+        # credentials are configured.
         return True
 
     def resolve_config(self) -> MinerUConfig:

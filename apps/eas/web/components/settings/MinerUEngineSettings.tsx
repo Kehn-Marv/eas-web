@@ -391,7 +391,7 @@ export function MinerUEngineSettings({
               localCli?.found
                 ? localCli.path
                 : t(
-                    'Install into any Python environment: uv pip install -U "mineru[all]>=3.4.5" — then set the CLI path below, or install into the server environment for PATH auto-detection.',
+                    'Install MinerU 3.x into the EAS server environment: uv pip install -U "mineru[core]>=3.4.5,<4.0.0". EAS currently uses the MinerU 3 CLI.',
                   )
             }
             control={renderTestControl(t("Check"))}

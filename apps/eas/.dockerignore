@@ -9,6 +9,21 @@
 
 # Runtime state is mounted as a volume and must never be copied into an image.
 data
+data-eas-local
+**/data-eas-local
+**/data-eas-local/**
+**/*.sqlite
+**/*.sqlite-*
+**/*.db
+**/*.db-*
+
+# Local secrets, settings, and caches must not enter the remote build context.
+.env
+.env.*
+**/.env
+**/.env.*
+.cache
+**/.cache
 
 # Local development metadata and caches.
 .git

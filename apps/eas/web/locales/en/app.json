@@ -1849,7 +1849,7 @@
   "Check": "Check",
   "The MinerU CLI must be reachable by the EAS server process. Reserve >=20 GB of free disk (official guidance): ~2-4 GB install, ~1-2 GB models lazily downloaded on first parse, plus parsing cache.": "The MinerU CLI must be reachable by the EAS server process. Reserve >=20 GB of free disk (official guidance): ~2-4 GB install, ~1-2 GB models lazily downloaded on first parse, plus parsing cache.",
   "Configured CLI path is not executable.": "Configured CLI path is not executable.",
-  "Install into any Python environment: uv pip install -U \"mineru[all]>=3.4.5\" — then set the CLI path below, or install into the server environment for PATH auto-detection.": "Install into any Python environment: uv pip install -U \"mineru[all]>=3.4.5\" — then set the CLI path below, or install into the server environment for PATH auto-detection.",
+  "Install MinerU 3.x into the EAS server environment: uv pip install -U \"mineru[core]>=3.4.5,<4.0.0\". EAS currently uses the MinerU 3 CLI.": "Install MinerU 3.x into the EAS server environment: uv pip install -U \"mineru[core]>=3.4.5,<4.0.0\". EAS currently uses the MinerU 3 CLI.",
   "CLI path": "CLI path",
   "Optional. Point to a mineru executable in an isolated environment (uv tool, pipx, conda) to avoid dependency conflicts. Leave blank to auto-detect from PATH.": "Optional. Point to a mineru executable in an isolated environment (uv tool, pipx, conda) to avoid dependency conflicts. Leave blank to auto-detect from PATH.",
   "Auto-detect from PATH": "Auto-detect from PATH",

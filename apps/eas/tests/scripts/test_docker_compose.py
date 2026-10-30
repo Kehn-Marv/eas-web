@@ -23,7 +23,7 @@ def _load_module():
         sys.modules.pop(spec.name, None)
 
 
-def test_render_docker_env_reads_json_only(tmp_path: Path) -> None:
+def test_render_docker_env_renders_ports_and_persistent_paths(tmp_path: Path, monkeypatch) -> None:
     module = _load_module()
     settings_dir = tmp_path / "settings"
     settings_dir.mkdir()
@@ -36,17 +36,25 @@ def test_render_docker_env_reads_json_only(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     output_path = tmp_path / "docker.env"
+    data_host = tmp_path / "durable-data"
+    monkeypatch.setenv("EAS_DATA_HOST", str(data_host))
+    monkeypatch.setenv("EAS_DOCKER_FRONTEND_HOST_PORT", "8080")
+    monkeypatch.setenv("EAS_ALLOW_RUNTIME_PARSER_MAINTENANCE", "false")
 
     values = module.render_docker_env(settings_dir, output_path)
 
-    assert values == {
-        "EAS_DOCKER_BACKEND_PORT": "9001",
-        "EAS_DOCKER_FRONTEND_PORT": "4000",
-        "EAS_DOCKER_POCKETBASE_PORT": "19090",
-    }
+    assert values["EAS_DOCKER_BACKEND_PORT"] == "9001"
+    assert values["EAS_DOCKER_FRONTEND_PORT"] == "4000"
+    assert values["EAS_DOCKER_POCKETBASE_PORT"] == "19090"
+    assert values["EAS_DOCKER_BACKEND_HOST_PORT"] == "9001"
+    assert values["EAS_DOCKER_FRONTEND_HOST_PORT"] == "8080"
+    assert values["EAS_DATA_HOST"] == str(data_host.resolve())
+    assert values["EAS_WORKSPACE_HOST"] == str((data_host / "user" / "workspace").resolve())
+    assert values["EAS_ALLOW_RUNTIME_PARSER_MAINTENANCE"] == "false"
     saved = output_path.read_text(encoding="utf-8")
     assert "\nBACKEND_PORT=" not in saved
     assert "EAS_DOCKER_BACKEND_PORT=9001" in saved
+    assert "EAS_DOCKER_FRONTEND_HOST_PORT=8080" in saved
 
 
 def test_render_docker_env_uses_defaults_for_missing_or_invalid_json(tmp_path: Path) -> None:
@@ -64,6 +72,8 @@ def test_render_docker_env_uses_defaults_for_missing_or_invalid_json(tmp_path: P
     assert values["EAS_DOCKER_BACKEND_PORT"] == "8001"
     assert values["EAS_DOCKER_FRONTEND_PORT"] == "3782"
     assert values["EAS_DOCKER_POCKETBASE_PORT"] == "8090"
+    assert values["EAS_DOCKER_FRONTEND_HOST_PORT"] == "3782"
+    assert values["EAS_ALLOW_RUNTIME_PARSER_MAINTENANCE"] == "true"
 
 
 def test_workspace_host_prepares_nested_outputs(tmp_path: Path) -> None:
@@ -104,7 +114,7 @@ def _compose_service(root: Path, name: str) -> dict:
 def _volume_targets(root: Path, name: str) -> set[str | None]:
     volumes = _compose_service(root, name).get("volumes", [])
     return {
-        (volume.get("target") if isinstance(volume, dict) else str(volume).split(":")[1])
+        (volume.get("target") if isinstance(volume, dict) else str(volume).rsplit(":", 1)[-1])
         for volume in volumes
     }
 

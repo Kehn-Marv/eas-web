@@ -176,7 +176,7 @@ def _start_mineru_download() -> tuple[bool, str, Any]:
             False,
             (
                 "The MinerU model downloader was not found. Install current MinerU first "
-                "(`pip install -U 'mineru[all]>=3.4.5'`); legacy magic-pdf has no "
+                "(`pip install -U 'mineru[core]>=3.4.5,<4.0.0'`); legacy magic-pdf has no "
                 "one-step download."
             ),
             None,

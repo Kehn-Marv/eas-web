@@ -114,9 +114,9 @@ server = [
 
 
 # Optional document-parsing engines for the shared parse layer
-# (eas/services/parsing). MinerU is an external CLI / hosted API and is
-# not a pip dependency. Engines import lazily, so these stay opt-in and an
-# absent engine simply reports unavailable in Settings → Document Parsing.
+# (eas/services/parsing). These extras are included in the production image.
+# The current EAS adapter targets MinerU's 3.x `mineru` CLI. Keep it below 4.0:
+# MinerU 4 moved to a different `mineru-kit` CLI and is not adapter-compatible.
 parse-markitdown = ["markitdown[all]>=0.1.7"]
 # Docling's base package intentionally leaves some format backends as extras.
 # Install all input-format dependencies so EAS can honor the complete
@@ -131,11 +131,13 @@ parse-docling = [
 # without a EAS-side major-version ceiling.
 parse-pymupdf4llm = ["pymupdf4llm>=1.28.2"]
 parse-liteparse = ["liteparse>=2.14.2"]
+parse-mineru = ["mineru[core]>=3.4.5,<4.0.0; python_version < '3.14'"]
 parse = [
     "eas[parse-markitdown]",
     "eas[parse-docling]",
     "eas[parse-pymupdf4llm]",
     "eas[parse-liteparse]",
+    "eas[parse-mineru]",
 ]
 
 

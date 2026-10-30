@@ -36,8 +36,8 @@ def test_list_engines_reports_metadata_and_availability() -> None:
     }
     assert engines["text_only"]["available"] is True
     assert engines["text_only"]["needs_local_models"] is False
-    # MinerU is an external CLI / hosted API — the adapter is always available;
-    # readiness (not availability) gates actual use.
+    # MinerU supports local CLI and hosted API modes. The adapter stays
+    # importable without the optional CLI; readiness gates actual use.
     assert engines["mineru"]["available"] is True
     assert engines["mineru"]["needs_local_models"] is True
     assert engines["markitdown"]["needs_local_models"] is False
@@ -805,16 +805,20 @@ def test_install_manager_spec_allowlist() -> None:
     )
 
     # Only optional pip-backed engines are installable; built-in / external are not.
-    assert installable_engines() == {"pymupdf4llm", "markitdown", "docling", "liteparse"}
+    assert installable_engines() == {
+        "mineru", "pymupdf4llm", "markitdown", "docling", "liteparse"
+    }
     assert ENGINE_PIP_SPECS["markitdown"] == ["markitdown[all]>=0.1.7"]
     assert ENGINE_PIP_SPECS["pymupdf4llm"] == ["pymupdf4llm>=1.28.2"]
     assert ENGINE_PIP_SPECS["liteparse"] == ["liteparse>=2.14.2"]
+    assert ENGINE_PIP_SPECS["mineru"] == [
+        "mineru[core]>=3.4.5,<4.0.0; python_version < '3.14'"
+    ]
     assert ENGINE_PIP_SPECS["docling"] == [
         "docling[xbrl]>=2.123.1",
         "docling-slim[format-iwork,format-opendocument,format-video]>=2.123.1",
     ]
     assert "text_only" not in ENGINE_PIP_SPECS
-    assert "mineru" not in ENGINE_PIP_SPECS
 
 
 def test_install_manager_upgrades_existing_package(monkeypatch) -> None:

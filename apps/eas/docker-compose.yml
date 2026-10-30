@@ -32,7 +32,7 @@ services:
     restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec"]
     volumes:
-      - ./data-eas-local/redis:/data
+      - "${EAS_DATA_HOST:-./data-eas-local}/redis:/data"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -50,16 +50,16 @@ services:
     image: ghcr.io/muchobien/pocketbase:latest
     restart: unless-stopped
     ports:
-      - "${EAS_DOCKER_POCKETBASE_PORT:-8090}:8090"
+      - "127.0.0.1:${EAS_DOCKER_POCKETBASE_HOST_PORT:-8090}:8090"
     volumes:
       # The upstream pocketbase image's entrypoint uses absolute paths
       # (no /pb/ prefix): --dir=/pb_data --publicDir=/pb_public
       # --hooksDir=/pb_hooks. The previous example mounted at /pb/pb_data
       # and crashed on first start with "mkdir /pb_data: read-only file
       # system".
-      - ./data-eas-local/pocketbase:/pb_data
-      - ./data-eas-local/pocketbase/public:/pb_public
-      - ./data-eas-local/pocketbase/hooks:/pb_hooks
+      - "${EAS_DATA_HOST:-./data-eas-local}/pocketbase:/pb_data"
+      - "${EAS_DATA_HOST:-./data-eas-local}/pocketbase/public:/pb_public"
+      - "${EAS_DATA_HOST:-./data-eas-local}/pocketbase/hooks:/pb_hooks"
     networks:
       - eas-network
     healthcheck:
@@ -73,26 +73,27 @@ services:
   # All-in-One EAS Service
   # ============================================
   eas:
-    image: eas-product:local
+    image: ${EAS_IMAGE:-eas-product:local}
     build:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - "${EAS_DOCKER_BACKEND_PORT:-8001}:${EAS_DOCKER_BACKEND_PORT:-8001}"
-      - "${EAS_DOCKER_FRONTEND_PORT:-3782}:${EAS_DOCKER_FRONTEND_PORT:-3782}"
+      # Keep FastAPI private to the VM host for diagnostics. The browser uses
+      # the same-origin Next.js proxy; only the frontend port is public.
+      - "127.0.0.1:${EAS_DOCKER_BACKEND_HOST_PORT:-8001}:${EAS_DOCKER_BACKEND_PORT:-8001}"
+      - "${EAS_DOCKER_FRONTEND_HOST_PORT:-3782}:${EAS_DOCKER_FRONTEND_PORT:-3782}"
 
     volumes:
       # Everything EAS persists lives under ./data-eas-local — a clean local
       # tree, separate from the retired bundled-image data.
-      # and back up: admin workspace + runtime settings (data/user), per-user
-      # workspaces (data/users), partners (data/partners), accounts/grants/
-      # audit (data/system), knowledge bases, memory.
+      # and back up: runtime settings, account state, workspaces, knowledge
+      # bases, and model caches.
       # The sandbox-runner gets a narrower slice of this volume: never
       # data/system, which holds auth state, provider API keys, and per-owner
       # secrets. What it *does* carry for non-admin accounts is wider than
       # workspace subtrees — see the scope note on that service's own volumes.
-      - ./data-eas-local:/app/data
+      - "${EAS_DATA_HOST:-./data-eas-local}:/app/data"
       - "${EAS_WORKSPACE_HOST:-./data-eas-local/user/workspace}:/workspace"
       - ./eas:/app/eas
       - ./scripts:/app/scripts
@@ -109,7 +110,16 @@ services:
       - EAS_WORKSPACE_ALLOWED_ROOTS=/workspace
       # Local development convenience. Hosted images default to read-only
       # parser setup so installs survive restarts through image configuration.
-      - EAS_ALLOW_RUNTIME_PARSER_MAINTENANCE=true
+      - EAS_ALLOW_RUNTIME_PARSER_MAINTENANCE=${EAS_ALLOW_RUNTIME_PARSER_MAINTENANCE:-true}
+
+      # Parser model caches live on the persistent data volume. The first
+      # deployment can prewarm them once; later container recreations reuse
+      # the same files instead of downloading them again.
+      - HF_HOME=/app/data/model-cache/huggingface
+      - MODELSCOPE_CACHE=/app/data/model-cache/modelscope
+      - DOCLING_CACHE_DIR=/app/data/model-cache/docling
+      - TORCH_HOME=/app/data/model-cache/torch
+      - XDG_CACHE_HOME=/app/data/model-cache/xdg
 
       # Optional dependencies, re-applied on every start (#762). Installing
       # these with `docker exec` does not survive `compose down`, so declare
@@ -156,6 +166,7 @@ services:
   # Not exposed to the host: it is reachable only on the internal
   # eas-network at http://sandbox-runner:8900.
   sandbox-runner:
+    image: ${EAS_RUNNER_IMAGE:-eas-runner:local}
     build:
       context: .
       dockerfile: Dockerfile.runner

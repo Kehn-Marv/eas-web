@@ -34,9 +34,11 @@ from ._versions import package_version
 logger = logging.getLogger(__name__)
 
 # Engine id -> pip requirement specifiers. Mirrors the optional extras in
-# pyproject.toml. Engines absent here (text_only built-in, mineru external
-# CLI/API) have no one-click install.
+# pyproject.toml. Engines absent here (text_only built-in) have no one-click
+# package install. MinerU is included so a local deployment can install the
+# same supported 3.x CLI as the production image.
 ENGINE_PIP_SPECS: dict[str, list[str]] = {
+    "mineru": ["mineru[core]>=3.4.5,<4.0.0; python_version < '3.14'"],
     "pymupdf4llm": ["pymupdf4llm>=1.28.2"],
     # ``all`` is upstream's supported way to install every built-in converter
     # dependency (PDF, Office, Outlook, audio, and future additions).
