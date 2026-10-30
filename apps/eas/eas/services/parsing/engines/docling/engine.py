@@ -38,10 +38,13 @@ def _dir_nonempty(path: Path) -> bool:
 
 def docling_models_dir() -> Path:
     """Docling's default model cache, where ``docling-tools models download``
-    writes (honors the ``DOCLING_CACHE_DIR`` override; default ~/.cache/docling).
+    writes (honors ``DOCLING_ARTIFACTS_PATH`` or the legacy cache override).
 
     Resolved without importing docling (heavy) so the readiness probe stays
-    cheap — it mirrors docling's own ``settings.cache_dir / "models"``."""
+    cheap — it mirrors Docling's own artifact/cache lookup."""
+    artifacts = os.environ.get("DOCLING_ARTIFACTS_PATH")
+    if artifacts:
+        return Path(artifacts).expanduser()
     cache = os.environ.get("DOCLING_CACHE_DIR")
     base = Path(cache).expanduser() if cache else Path.home() / ".cache" / "docling"
     return base / "models"

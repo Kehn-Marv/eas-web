@@ -410,13 +410,16 @@ from eas.services.setup import init_user_directories
 init_user_directories(Path('/app'))
 " || echo "   ⚠️ Directory initialization failed (volume writability check follows)"
 
-# Re-chown /app/data to the (possibly remapped) eas user. Named Docker
-# volumes are typically root-owned and need this. Bind mounts on Unraid/NFS
-# often reject chown and keep the host owner — do NOT swallow that with
-# `|| true`; warn and let the writability probe fail-fast if the runtime
-# user still cannot write.
+# Chown a new or differently mapped data volume once to the runtime user.
+# Parser weights can be several GB, so rescanning every model file on every
+# container restart would make deploys needlessly slow. PUID/PGID changes
+# intentionally create a new marker and perform one new ownership pass.
 if [ "$(id -u)" -eq 0 ]; then
-    if chown -R eas:eas /app/data; then
+    OWNERSHIP_MARKER="/app/data/.eas-owner-${PUID}-${PGID}"
+    if [ -f "$OWNERSHIP_MARKER" ]; then
+        echo "   ✅ /app/data ownership already prepared for uid=${PUID} gid=${PGID}"
+    elif chown -R eas:eas /app/data; then
+        touch "$OWNERSHIP_MARKER"
         echo "   ✅ /app/data owned by eas (uid=${PUID} gid=${PGID})"
     else
         echo "   ⚠️ chown /app/data failed (common on Unraid/NFS bind mounts that reject ownership changes)."

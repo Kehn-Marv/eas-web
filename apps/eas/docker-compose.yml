@@ -115,9 +115,12 @@ services:
       # Parser model caches live on the persistent data volume. The first
       # deployment can prewarm them once; later container recreations reuse
       # the same files instead of downloading them again.
+      - HOME=/app/data/model-cache/home
       - HF_HOME=/app/data/model-cache/huggingface
       - MODELSCOPE_CACHE=/app/data/model-cache/modelscope
-      - DOCLING_CACHE_DIR=/app/data/model-cache/docling
+      - DOCLING_ARTIFACTS_PATH=/app/data/model-cache/docling
+      - MINERU_TOOLS_CONFIG_JSON=/app/data/model-cache/mineru.json
+      - MINERU_MODEL_SOURCE=${MINERU_MODEL_SOURCE:-huggingface}
       - TORCH_HOME=/app/data/model-cache/torch
       - XDG_CACHE_HOME=/app/data/model-cache/xdg
 

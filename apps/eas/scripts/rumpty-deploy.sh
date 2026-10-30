@@ -29,4 +29,6 @@ fi
 cd "$PROJECT_ROOT"
 python3 scripts/docker_compose.py pull
 python3 scripts/docker_compose.py up -d --no-build --remove-orphans
+echo "Warming persistent document parser models (skips when versions are already cached)..."
+bash scripts/warm_parser_models.sh
 python3 scripts/docker_compose.py ps

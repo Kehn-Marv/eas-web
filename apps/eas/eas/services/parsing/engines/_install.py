@@ -44,12 +44,11 @@ ENGINE_PIP_SPECS: dict[str, list[str]] = {
     # dependency (PDF, Office, Outlook, audio, and future additions).
     "markitdown": ["markitdown[all]>=0.1.7"],
     # Keep the base converter and every format-specific dependency aligned
-    # with the Docling compatibility floor.  ``format-video`` also brings the
-    # ASR dependencies used by audio; legacy Office still needs LibreOffice
-    # and video conversion still needs ffmpeg on the host, per Docling.
+    # with the Docling compatibility floor. Video/ASR parsing was removed from
+    # EAS, so install only the document and office format backends we support.
     "docling": [
         "docling[xbrl]>=2.123.1",
-        "docling-slim[format-iwork,format-opendocument,format-video]>=2.123.1",
+        "docling-slim[format-iwork,format-opendocument]>=2.123.1",
     ],
     "liteparse": ["liteparse>=2.14.2"],
 }

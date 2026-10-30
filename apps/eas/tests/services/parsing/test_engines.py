@@ -816,7 +816,7 @@ def test_install_manager_spec_allowlist() -> None:
     ]
     assert ENGINE_PIP_SPECS["docling"] == [
         "docling[xbrl]>=2.123.1",
-        "docling-slim[format-iwork,format-opendocument,format-video]>=2.123.1",
+        "docling-slim[format-iwork,format-opendocument]>=2.123.1",
     ]
     assert "text_only" not in ENGINE_PIP_SPECS
 
@@ -929,6 +929,10 @@ def test_background_job_manager_idle_status() -> None:
 def test_docling_models_dir_honors_cache_env(monkeypatch, tmp_path) -> None:
     from eas.services.parsing.engines.docling import engine as docling_engine
 
+    artifacts = tmp_path / "persistent-docling-models"
+    monkeypatch.setenv("DOCLING_ARTIFACTS_PATH", str(artifacts))
+    assert docling_engine.docling_models_dir() == artifacts
+    monkeypatch.delenv("DOCLING_ARTIFACTS_PATH")
     monkeypatch.setenv("DOCLING_CACHE_DIR", str(tmp_path))
     assert docling_engine.docling_models_dir() == tmp_path / "models"
     # Empty cache → not ready; a populated models dir → detected as ready.

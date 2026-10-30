@@ -119,12 +119,11 @@ server = [
 # MinerU 4 moved to a different `mineru-kit` CLI and is not adapter-compatible.
 parse-markitdown = ["markitdown[all]>=0.1.7"]
 # Docling's base package intentionally leaves some format backends as extras.
-# Install all input-format dependencies so EAS can honor the complete
-# upstream format list. Legacy Office needs LibreOffice and video needs ffmpeg
-# on the host in addition to these Python packages.
+# Install the supported document-format dependencies. Legacy Office conversion
+# also uses LibreOffice, which is installed in the production image.
 parse-docling = [
     "docling[xbrl]>=2.123.1",
-    "docling-slim[format-iwork,format-opendocument,format-video]>=2.123.1",
+    "docling-slim[format-iwork,format-opendocument]>=2.123.1",
 ]
 # Current PyMuPDF4LLM includes CPU-only layout/OCR and image extraction on its
 # public conversion path. Keep it upgradeable so format and layout gains land

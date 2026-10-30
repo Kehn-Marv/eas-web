@@ -378,7 +378,7 @@ The GitHub Actions workflow at `.github/workflows/publish-eas-images.yml` builds
 
 #### 2. Create the VM and persistent volume
 
-In Rumpty, switch to the `EAS Production` workspace, create an Ubuntu 24.04 VM, add a workspace SSH key, and attach a formatted volume in the same region. The Ultra size (4 vCPU, 8 GB RAM, 160 GB VM disk) is the largest currently listed VM tier and is the safer starting point for CPU-based document parsing. MinerU's current resource guidance lists 8 GB as a minimum for its standard/advanced CPU path; higher-throughput parsing benefits from more memory than this VM offers. Limit parsing concurrency and test representative documents before opening the service to users. The VM price shown in the console is the billing source of truth. A separate 50 GiB volume is $2.50/month at Rumpty's published $0.05/GiB/month rate, with any currency conversion shown in the console. Attach it before first boot so Rumpty mounts it at `/mnt/rumpty/<volume-id>` and retains it independently of the VM.
+In Rumpty, switch to the `EAS Production` workspace and use the console to create an Ubuntu 24.04 VM, add a workspace SSH key, and attach a formatted volume in the same region. The CLI can list and operate existing VMs but does not currently create them. The Ultra size (4 vCPU, 8 GB RAM, 160 GB VM disk) was the largest tier shown in the console during this deployment review. That is enough to start the EAS stack, but it is below [MinerU 3.4.5's documented 16 GB minimum for its local pipeline](https://github.com/opendatalab/MinerU/blob/mineru-3.4.5-released/docs/en/quick_start/index.md) (32 GB recommended). Other parsers remain available on this VM; local MinerU parsing may run out of memory. Use MinerU's cloud mode with a configured API token, or choose a larger-memory host, when reliable MinerU parsing is required. Check current VM and volume prices in the console before creating them; Rumpty charges resources hourly, and stopped VMs continue to be billed. A 50 GiB volume is a starting point for model files and user data. Attach it before first boot so Rumpty formats it as ext4 and mounts it at `/mnt/rumpty/<volume-id>`. The volume persists separately from the VM.
 
 #### 3. Install Docker and check out the public repository
 
@@ -411,20 +411,20 @@ cd /opt/eas-web/apps/eas
 sudo bash scripts/rumpty-deploy.sh
 ```
 
-The deploy script pulls the published images and starts Compose without building on the VM. Container restart policies bring the services back after a VM reboot. Application state, PocketBase data, workspace files, and parser caches live under `EAS_DATA_HOST`; Redis uses a small Docker-managed volume on the VM disk because it only holds coordination state. Provider credentials are configured in EAS settings and must not be put in this environment file.
+The deploy script pulls the published images, starts Compose without building on the VM, waits for the EAS container, and warms Docling and MinerU models on the persistent volume. It skips model downloads when parser package versions and the configured MinerU model source/type match the volume's cache marker. Container restart policies bring services back after a VM reboot. Application state, PocketBase data, workspace files, and parser caches live under `EAS_DATA_HOST`; Redis uses a small Docker-managed volume on the VM disk because it only holds coordination state. Provider credentials are configured in EAS settings and must not be put in this environment file.
 
 Only the web frontend is published on VM port `8080`. FastAPI and the PocketBase admin port bind to VM loopback and are not publicly exposed. Next.js forwards same-origin API and WebSocket requests to FastAPI inside the EAS container.
 
-#### 4. Warm parser models once
+#### 4. Parser model warm-up
 
-The production image includes the supported parser packages, including MinerU 3.x. Model weights are separate from Python packages, so download them once into the attached volume after the containers are healthy:
+The production image includes the supported parser packages, including MinerU 3.x. Model weights are separate from Python packages, so the deployment script downloads them into the attached volume after the containers are healthy. Docling's artifacts and MinerU's configuration, Hugging Face cache, and ModelScope cache are explicitly directed to the persistent volume; downloads run as the app's unprivileged user so the web process can read and reuse them. To refresh after changing parser model versions, run:
 
 ```bash
 cd /opt/eas-web/apps/eas
 sudo bash scripts/warm_parser_models.sh
 ```
 
-This downloads Docling models and MinerU's pipeline and VLM models. It may take several minutes and several gigabytes of storage. Reboots and image updates reuse the cache. MinerU is pinned below 4.0 because the current EAS adapter targets the 3.x `mineru` CLI; its newer 4.x `mineru-kit` CLI is not compatible. MinerU 3.x is installed with its `core` extra, not `all`, to avoid the optional Linux vLLM stack on a CPU VM. Pre-downloading model files makes the engines ready without first-use downloads; it does not guarantee every model will fit in memory for every document size. Keep heavy parsing concurrency low and check readiness before selecting an engine.
+This downloads Docling's default parser models and MinerU's pipeline and VLM models. It may take several minutes and several gigabytes of storage. Reboots and image updates reuse the cache. If Hugging Face downloads are unavailable from the VM, set `MINERU_MODEL_SOURCE=modelscope` in `/etc/eas/eas.env` and rerun the warm-up script; both download caches persist on the mounted volume. MinerU is pinned below 4.0 because the current EAS adapter targets the 3.x `mineru` CLI; its newer 4.x `mineru-kit` CLI is not compatible. MinerU 3.x is installed with its `core` extra, not `all`, to avoid the optional Linux vLLM stack on a CPU VM. Pre-downloading model files makes the local engines ready without first-use downloads; it does not guarantee every model will fit in memory for every document size. Keep heavy parsing concurrency low and check readiness before selecting an engine. Because EAS offers MinerU through an online service, this public documentation identifies MinerU as a component, meeting its attribution requirement.
 
 #### 5. Publish the public URL and verify
 
