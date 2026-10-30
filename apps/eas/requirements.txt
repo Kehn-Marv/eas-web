@@ -1,0 +1,6 @@
+# Install the deployed EAS web application, every in-process document parser,
+# and all knowledge engine extras (GraphRAG, LightRAG, rerank). Keep these in
+# the production image so a deployed learner or hosted cloud container (Rumpty/Docker)
+# has all engines fully available out of the box without runtime installs.
+# Run from the apps/eas source directory; pyproject.toml is the dependency source.
+-e .[parse,graphrag,rag-lightrag,rag-rerank]

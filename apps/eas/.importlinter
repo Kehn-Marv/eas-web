@@ -1,0 +1,36 @@
+[importlinter]
+root_package = eas
+
+[importlinter:contract:core-purity]
+name = Core contains values and protocols only
+type = forbidden
+source_modules =
+    eas.core
+forbidden_modules =
+    eas.app
+    eas.api
+    eas.runtime
+    eas.services
+
+[importlinter:contract:no-api-backimports]
+name = Runtime and service layers do not import API adapters
+type = forbidden
+source_modules =
+    eas.runtime
+    eas.services
+    eas.knowledge
+    eas.learning
+    eas.capabilities
+    eas.agents
+forbidden_modules =
+    eas.api
+ignore_imports =
+    eas.learning.tests.** -> eas.api.**
+
+[importlinter:contract:app-adapter-direction]
+name = Application does not import API adapters
+type = forbidden
+source_modules =
+    eas.app
+forbidden_modules =
+    eas.api

@@ -1,0 +1,3 @@
+# Full FastAPI application runtime, declared in pyproject.toml.
+# Run from the apps/eas source directory.
+-e .[server]

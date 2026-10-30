@@ -1,0 +1,334 @@
+/* ----------------------------------------------------------------------------
+   Landing Page Styles & Design Tokens (Ported from apps/landing)
+---------------------------------------------------------------------------- */
+
+:root {
+  /* fonts */
+  --font-fustat-family: var(--font-fustat), sans-serif;
+  --font-geist-family: var(--font-geist-sans), sans-serif;
+
+  /* base surfaces */
+  --color-background: #faf8f5;
+  --color-foreground: #171717;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f5f5f5;
+  --color-surface-subtle: #fafafa;
+  --color-border: #e5e5e5;
+  --color-border-strong: #d4d4d4;
+  --color-input: #e5e5e5;
+  --color-ring: #171717;
+  --color-accent: #f5f5f5;
+  --color-accent-foreground: #171717;
+  --color-muted: #f5f5f5;
+  --color-muted-foreground: #737373;
+
+  /* semantic state colors */
+  --color-correct: #16a34a;
+  --color-correct-fg: #166534;
+  --color-correct-bg: #dcfce7;
+  --color-correct-border: #4ade80;
+
+  --color-incorrect: #dc2626;
+  --color-incorrect-fg: #991b1b;
+  --color-incorrect-bg: #fee2e2;
+  --color-incorrect-border: #f87171;
+
+  --color-info: #3b82f6;
+  --color-info-fg: #1e40af;
+  --color-info-bg: #eff6ff;
+  --color-info-border: #bfdbfe;
+
+  --color-hint: #db2777;
+  --color-hint-fg: #9d174d;
+  --color-hint-bg: #fdf2f8;
+  --color-hint-border: #fbcfe8;
+
+  --color-warning: #d97706;
+  --color-warning-fg: #92400e;
+  --color-warning-bg: #fffbeb;
+  --color-warning-border: #fde68a;
+
+  /* brand rainbow */
+  --color-brand-1: #fb7372;
+  --color-brand-2: #ffc33e;
+  --color-brand-3: #51b9f3;
+  --color-brand-4: #2cbf76;
+
+  /* brand gradient ring */
+  --brand-ring: linear-gradient(
+    to right,
+    var(--color-brand-1) 0%,
+    var(--color-brand-2) 30%,
+    rgba(0, 0, 0, 0.45) 49%,
+    var(--color-brand-3) 66%,
+    var(--color-brand-4) 100%
+  );
+
+  /* motion timing */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-smooth: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+html:has(.landing-root) {
+  height: auto !important;
+  min-height: 100% !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+body:has(.landing-root) {
+  height: auto !important;
+  min-height: 100% !important;
+  overflow: visible !important;
+}
+
+/* ----------------------------------------------------------------------------
+   Landing Navbar: Frosted milky glassmorphism matching the reference level
+---------------------------------------------------------------------------- */
+.landing-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  height: 4rem;
+  width: 100%;
+  border-bottom: 0.5px solid var(--color-border);
+  background-color: rgba(250, 248, 245, 0.88);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.landing-root {
+  font-family: var(--font-fustat), sans-serif;
+  letter-spacing: -0.013em;
+  background-color: #faf8f5;
+  color: #171717;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.landing-root h1,
+.landing-root h2,
+.landing-root h3,
+.landing-root p,
+.landing-root span,
+.landing-root a,
+.landing-root button {
+  font-family: var(--font-fustat), sans-serif;
+}
+
+/* ----------------------------------------------------------------------------
+   Utility classes matching Tailwind v4 @theme aliases
+---------------------------------------------------------------------------- */
+.bg-surface-muted { background-color: var(--color-surface-muted); }
+.bg-surface-subtle { background-color: var(--color-surface-subtle); }
+.border-border { border-color: var(--color-border); }
+.border-border-strong { border-color: var(--color-border-strong); }
+.text-hint-fg { color: var(--color-hint-fg); }
+.bg-hint-bg { background-color: var(--color-hint-bg); }
+.border-hint-border { border-color: var(--color-hint-border); }
+.text-correct { color: var(--color-correct); }
+.text-correct-fg { color: var(--color-correct-fg); }
+.bg-correct { background-color: var(--color-correct); }
+.bg-correct-bg { background-color: var(--color-correct-bg); }
+.border-correct-border { border-color: var(--color-correct-border); }
+.text-incorrect { color: var(--color-incorrect); }
+.text-incorrect-fg { color: var(--color-incorrect-fg); }
+.bg-incorrect { background-color: var(--color-incorrect); }
+.bg-incorrect-bg { background-color: var(--color-incorrect-bg); }
+.border-incorrect-border { border-color: var(--color-incorrect-border); }
+.border-brand-1 { border-color: var(--color-brand-1); }
+.bg-brand-1 { background-color: var(--color-brand-1); }
+.text-brand-1 { color: var(--color-brand-1); }
+
+/* Animation easings */
+.ease-standard { transition-timing-function: cubic-bezier(0.2, 0, 0, 1); }
+.ease-out-soft { transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
+.ease-in-out-smooth { transition-timing-function: cubic-bezier(0.65, 0, 0.35, 1); }
+
+/* ----------------------------------------------------------------------------
+   Step cards hover and interactive states
+---------------------------------------------------------------------------- */
+.group:hover .group-hover\:border-brand-1 {
+  border-color: var(--color-brand-1) !important;
+}
+.group:hover .group-hover\:translate-y-6 {
+  transform: translateY(1.5rem) !important;
+}
+.group:hover .group-hover\:shadow-md {
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+}
+.group:hover .group-hover\:border-correct-border {
+  border-color: var(--color-correct-border) !important;
+}
+.group:hover .group-hover\:bg-correct-bg {
+  background-color: var(--color-correct-bg) !important;
+}
+.group:hover .group-hover\:bg-correct {
+  background-color: var(--color-correct) !important;
+}
+.group:hover .group-hover\:text-white {
+  color: #ffffff !important;
+}
+.group:hover .group-hover\:block {
+  display: block !important;
+}
+.group:hover .group-hover\:hidden {
+  display: none !important;
+}
+.group:hover .group-hover\:w-full {
+  width: 100% !important;
+}
+.group:hover .group-hover\:opacity-100 {
+  opacity: 1 !important;
+}
+.group:hover .group-hover\:translate-y-0 {
+  transform: translateY(0) !important;
+}
+.group:hover .group-hover\:\[stroke-dashoffset\:0\] {
+  stroke-dashoffset: 0 !important;
+}
+
+/* Mobile defaults (max-md: <= 767px) for touch/small screens */
+@media (max-width: 767px) {
+  .max-md\:border-brand-1 {
+    border-color: var(--color-brand-1) !important;
+  }
+  .max-md\:translate-y-6 {
+    transform: translateY(1.5rem) !important;
+  }
+  .max-md\:shadow-md {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+  }
+  .max-md\:border-correct-border {
+    border-color: var(--color-correct-border) !important;
+  }
+  .max-md\:bg-correct-bg {
+    background-color: var(--color-correct-bg) !important;
+  }
+  .max-md\:bg-correct {
+    background-color: var(--color-correct) !important;
+  }
+  .max-md\:text-white {
+    color: #ffffff !important;
+  }
+  .max-md\:block {
+    display: block !important;
+  }
+  .max-md\:hidden {
+    display: none !important;
+  }
+  .max-md\:w-full {
+    width: 100% !important;
+  }
+  .max-md\:opacity-100 {
+    opacity: 1 !important;
+  }
+  .max-md\:translate-y-0 {
+    transform: translateY(0) !important;
+  }
+  .max-md\:\[stroke-dashoffset\:0\] {
+    stroke-dashoffset: 0 !important;
+  }
+}
+
+/* ----------------------------------------------------------------------------
+   Brand gradient border utilities
+---------------------------------------------------------------------------- */
+.gradient-border {
+  position: relative;
+  border: 0.5px solid transparent;
+  background:
+    linear-gradient(#fff, #fff) padding-box,
+    var(--brand-ring) border-box;
+  border-radius: 1rem;
+}
+
+.gradient-border-button {
+  border: 0.5px solid transparent;
+  background:
+    linear-gradient(#171717, #171717) padding-box,
+    var(--brand-ring) border-box;
+  border-radius: 9999px;
+}
+
+.border-thin {
+  border-width: 0.5px;
+}
+
+/* ----------------------------------------------------------------------------
+   Keyframes & Animation Utilities
+---------------------------------------------------------------------------- */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn { animation: fadeIn var(--duration-base) var(--ease-standard) both; }
+.animate-fadeInUp { animation: fadeInUp var(--duration-slow) var(--ease-standard) both; }
+.animate-scaleIn { animation: scaleIn var(--duration-slow) var(--ease-out-soft) both; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .interactive {
+    transition:
+      transform var(--duration-fast) var(--ease-out-soft),
+      box-shadow var(--duration-base) var(--ease-standard),
+      background-color var(--duration-base) var(--ease-standard),
+      border-color var(--duration-base) var(--ease-standard),
+      color var(--duration-base) var(--ease-standard);
+  }
+  .interactive:hover { transform: translateY(-1px); }
+  .interactive:active { transform: translateY(0) scale(0.98); }
+
+  .card-hover {
+    transition:
+      transform var(--duration-base) var(--ease-out-soft),
+      box-shadow var(--duration-base) var(--ease-standard),
+      border-color var(--duration-base) var(--ease-standard);
+  }
+  .card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px -8px rgb(0 0 0 / 0.12);
+  }
+
+  .rise {
+    animation: riseIn 0.5s var(--ease-out-soft) both;
+  }
+  .reveal {
+    opacity: 0;
+    transform: translateY(16px);
+    transition:
+      opacity 0.5s var(--ease-out-soft),
+      transform 0.5s var(--ease-out-soft);
+  }
+  .reveal.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

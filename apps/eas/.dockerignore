@@ -1,0 +1,22 @@
+# Dependencies and build output are installed/built inside the image.
+**/node_modules
+**/.next
+**/.next-*
+**/dist
+**/out
+**/.turbo
+**/.vercel
+
+# Runtime state is mounted as a volume and must never be copied into an image.
+data
+
+# Local development metadata and caches.
+.git
+**/__pycache__
+**/*.py[cod]
+**/.pytest_cache
+**/.ruff_cache
+**/.mypy_cache
+**/.venv
+**/venv
+**/env

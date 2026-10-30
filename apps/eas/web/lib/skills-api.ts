@@ -1,0 +1,225 @@
+import { apiFetch, apiUrl as baseApiUrl } from "@/lib/api";
+import { invalidateClientCache, withClientCache } from "@/lib/client-cache";
+import { asJsonOrThrow as asJson } from "@/lib/api";
+
+function skillWorkspace(): string {
+  return typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("skill_workspace") ?? "";
+}
+
+function apiUrl(path: string): string {
+  const url = baseApiUrl(path);
+  const scope = skillWorkspace();
+  return scope ? `${url}${url.includes("?") ? "&" : "?"}skill_workspace=${encodeURIComponent(scope)}` : url;
+}
+
+const SKILLS_CACHE_PREFIX = "skills:";
+const SKILL_TAGS_CACHE_KEY = `${SKILLS_CACHE_PREFIX}tags`;
+
+export type SkillSource = "user" | "builtin" | "admin";
+
+export interface SkillInfo {
+  name: string;
+  description: string;
+  tags: string[];
+  source?: SkillSource;
+  read_only?: boolean;
+}
+
+export interface SkillDetail extends SkillInfo {
+  content: string;
+}
+
+export interface CreateSkillPayload {
+  name: string;
+  description: string;
+  content: string;
+  tags?: string[];
+}
+
+export interface UpdateSkillPayload {
+  description?: string;
+  content?: string;
+  rename_to?: string;
+  tags?: string[];
+}
+
+function normalizeSource(raw: unknown): SkillSource {
+  return raw === "builtin" || raw === "admin" ? raw : "user";
+}
+
+function normalizeTags(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const item of raw) {
+    const tag = String(item ?? "")
+      .trim()
+      .toLowerCase();
+    if (!tag || seen.has(tag)) continue;
+    seen.add(tag);
+    out.push(tag);
+  }
+  return out;
+}
+
+export async function listSkills(options?: {
+  force?: boolean;
+}): Promise<SkillInfo[]> {
+  return withClientCache<SkillInfo[]>(
+    `${SKILLS_CACHE_PREFIX}list:${skillWorkspace()}`,
+    async () => {
+      const response = await apiFetch(apiUrl("/api/skills/list"), {
+        cache: "no-store",
+      });
+      const data = await asJson(response);
+      const items = Array.isArray(data?.skills) ? data.skills : [];
+      return items.map(
+        (item: {
+          name?: unknown;
+          description?: unknown;
+          tags?: unknown;
+          source?: unknown;
+          read_only?: unknown;
+        }) => ({
+          name: String(item?.name ?? ""),
+          description: String(item?.description ?? ""),
+          tags: normalizeTags(item?.tags),
+          source: normalizeSource(item?.source),
+          read_only: Boolean(item?.read_only),
+        }),
+      );
+    },
+    { force: options?.force },
+  );
+}
+
+export async function getSkill(name: string): Promise<SkillDetail> {
+  const response = await apiFetch(
+    apiUrl(`/api/skills/${encodeURIComponent(name)}`),
+    {
+      cache: "no-store",
+    },
+  );
+  const data = await asJson(response);
+  return {
+    name: String(data?.name ?? name),
+    description: String(data?.description ?? ""),
+    content: String(data?.content ?? ""),
+    tags: normalizeTags(data?.tags),
+    source: normalizeSource(data?.source),
+    read_only: Boolean(data?.read_only),
+  };
+}
+
+export async function createSkill(
+  payload: CreateSkillPayload,
+): Promise<SkillInfo> {
+  const response = await apiFetch(apiUrl("/api/skills/create"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: payload.name,
+      description: payload.description,
+      content: payload.content,
+      tags: payload.tags ?? [],
+    }),
+  });
+  const data = await asJson(response);
+  invalidateSkillsCache();
+  return {
+    name: String(data?.name ?? payload.name),
+    description: String(data?.description ?? payload.description ?? ""),
+    tags: normalizeTags(data?.tags ?? payload.tags),
+  };
+}
+
+export async function updateSkill(
+  name: string,
+  payload: UpdateSkillPayload,
+): Promise<SkillInfo> {
+  const response = await apiFetch(
+    apiUrl(`/api/skills/${encodeURIComponent(name)}`),
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    },
+  );
+  const data = await asJson(response);
+  invalidateSkillsCache();
+  return {
+    name: String(data?.name ?? name),
+    description: String(data?.description ?? ""),
+    tags: normalizeTags(data?.tags),
+  };
+}
+
+export async function deleteSkill(name: string): Promise<void> {
+  const response = await apiFetch(
+    apiUrl(`/api/skills/${encodeURIComponent(name)}`),
+    {
+      method: "DELETE",
+    },
+  );
+  await asJson(response);
+  invalidateSkillsCache();
+}
+
+export async function listSkillTags(options?: {
+  force?: boolean;
+}): Promise<string[]> {
+  return withClientCache<string[]>(
+    SKILL_TAGS_CACHE_KEY,
+    async () => {
+      const response = await apiFetch(apiUrl("/api/skills/tags/list"), {
+        cache: "no-store",
+      });
+      const data = await asJson(response);
+      return normalizeTags(data?.tags);
+    },
+    { force: options?.force },
+  );
+}
+
+export async function createSkillTag(name: string): Promise<string> {
+  const response = await apiFetch(apiUrl("/api/skills/tags/create"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name }),
+  });
+  const data = await asJson(response);
+  invalidateSkillsCache();
+  return String(data?.name ?? name);
+}
+
+export async function renameSkillTag(
+  oldName: string,
+  newName: string,
+): Promise<string> {
+  const response = await apiFetch(
+    apiUrl(`/api/skills/tags/${encodeURIComponent(oldName)}`),
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rename_to: newName }),
+    },
+  );
+  const data = await asJson(response);
+  invalidateSkillsCache();
+  return String(data?.name ?? newName);
+}
+
+export async function deleteSkillTag(name: string): Promise<void> {
+  const response = await apiFetch(
+    apiUrl(`/api/skills/tags/${encodeURIComponent(name)}`),
+    {
+      method: "DELETE",
+    },
+  );
+  await asJson(response);
+  invalidateSkillsCache();
+}
+
+export function invalidateSkillsCache() {
+  invalidateClientCache(SKILLS_CACHE_PREFIX);
+}

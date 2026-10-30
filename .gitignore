@@ -1,0 +1,224 @@
+# ============================================
+# EAS Root .gitignore
+# ============================================
+
+# ============================================
+# Runtime Data & User Storage
+# ============================================
+data/
+**/data/
+data-eas-local/
+**/data-eas-local/
+multi-user/
+**/multi-user/
+apps/eas/docs/
+design-qa.md
+site/
+.claude/
+.agents/
+.workbuddy/
+.gemini/
+
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.out
+*.synctex.gz
+*.pdf
+!apps/eas/tests/fixtures/lightrag_bridge/original.pdf
+!apps/eas/tests/fixtures/lightrag_bridge/mineru-v2-current/*_origin.pdf
+
+# ============================================
+# Python Related
+# ============================================
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+env/
+venv/
+ENV/
+.venv/
+**/env/
+**/venv/
+**/.venv/
+env.bak/
+venv.bak/
+
+# Environment configuration & Secrets (Keep example templates only)
+.env
+.env.*
+*.env
+*.env.local
+.env.local
+.env.production
+.env.development
+!.env.example
+!**/.env.example
+
+# ============================================
+# Node.js and Frontend Build
+# ============================================
+node_modules/
+**/node_modules/
+pnpm-lock.yaml
+pnpm-workspace.yaml
+
+# Next.js build output
+.next/
+**/.next/
+web/.next-*/
+apps/eas/web/.next-*/
+web/public/pdfjs/
+apps/eas/web/public/pdfjs/
+web/tsconfig.eas-*.json
+apps/eas/web/tsconfig.eas-*.json
+web/tmp/
+apps/eas/web/tmp/
+out/
+.vercel/
+.turbo/
+.open-next/
+.wrangler/
+.vite/
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Common Output and Cache Directories
+output/
+outputs/
+cache/
+.cache/
+.ruff_cache/
+.import_linter_cache/
+.playwright-cli/
+web/test-results/
+web/playwright-report/
+apps/eas/web/test-results/
+apps/eas/web/playwright-report/
+
+# Log files
+*.log
+*.log.*
+*.jsonl
+logs/
+**/logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ============================================
+# IDE and Editors
+# ============================================
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.cursor/
+.idea/
+*.iml
+*.iws
+*.ipr
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+.netrwhist
+
+# ============================================
+# Operating System Files
+# ============================================
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# ============================================
+# Testing and Coverage
+# ============================================
+*.tmp
+*.temp
+*.bak
+*.backup
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+**/.pytest_cache/
+.pytest_tmp/
+.tox/
+nosetests.xml
+coverage.xml
+
+# ============================================
+# Type Checking
+# ============================================
+.mypy_cache/
+**/.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+
+# ============================================
+# Database Files & Media
+# ============================================
+*.db
+*.sqlite
+*.sqlite3
+*.mp3
+*.wav
+*.ogg
