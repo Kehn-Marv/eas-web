@@ -59,6 +59,6 @@ def test_core_mcp_and_cron_dependencies_are_in_the_application_runtime() -> None
 def test_optional_parser_and_rag_extras_remain_available() -> None:
     extras = _project()["optional-dependencies"]
     assert extras["parse-markitdown"] == ["markitdown[all]>=0.1.7"]
-    assert extras["parse-pymupdf4llm"] == ["pymupdf4llm>=1.28.2"]
+    assert extras["parse-pymupdf4llm"] == ["pymupdf4llm>=1.28.2,<2.0.0"]
     assert extras["parse-liteparse"] == ["liteparse>=2.14.2"]
     assert extras["rag-lightrag"] == ["lightrag-hku==1.5.7"]

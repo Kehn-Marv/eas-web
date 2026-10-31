@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 # same supported 3.x CLI as the production image.
 ENGINE_PIP_SPECS: dict[str, list[str]] = {
     "mineru": ["mineru[core]>=3.4.5,<4.0.0; python_version < '3.14'"],
-    "pymupdf4llm": ["pymupdf4llm>=1.28.2"],
+    "pymupdf4llm": ["pymupdf4llm>=1.28.2,<2.0.0"],
     # ``all`` is upstream's supported way to install every built-in converter
     # dependency (PDF, Office, Outlook, audio, and future additions).
     "markitdown": ["markitdown[all]>=0.1.7"],

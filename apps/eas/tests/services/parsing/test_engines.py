@@ -809,7 +809,7 @@ def test_install_manager_spec_allowlist() -> None:
         "mineru", "pymupdf4llm", "markitdown", "docling", "liteparse"
     }
     assert ENGINE_PIP_SPECS["markitdown"] == ["markitdown[all]>=0.1.7"]
-    assert ENGINE_PIP_SPECS["pymupdf4llm"] == ["pymupdf4llm>=1.28.2"]
+    assert ENGINE_PIP_SPECS["pymupdf4llm"] == ["pymupdf4llm>=1.28.2,<2.0.0"]
     assert ENGINE_PIP_SPECS["liteparse"] == ["liteparse>=2.14.2"]
     assert ENGINE_PIP_SPECS["mineru"] == [
         "mineru[core]>=3.4.5,<4.0.0; python_version < '3.14'"

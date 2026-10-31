@@ -125,10 +125,10 @@ parse-docling = [
     "docling[xbrl]>=2.123.1",
     "docling-slim[format-iwork,format-opendocument]>=2.123.1",
 ]
-# Current PyMuPDF4LLM includes CPU-only layout/OCR and image extraction on its
-# public conversion path. Keep it upgradeable so format and layout gains land
-# without a EAS-side major-version ceiling.
-parse-pymupdf4llm = ["pymupdf4llm>=1.28.2"]
+# PyMuPDF4LLM 2.0 is an empty compatibility package: the implementation moved
+# into PyMuPDF 2.x. EAS currently imports the legacy ``pymupdf4llm`` module, so
+# stay on the last 1.x implementation until the adapter supports the new API.
+parse-pymupdf4llm = ["pymupdf4llm>=1.28.2,<2.0.0"]
 parse-liteparse = ["liteparse>=2.14.2"]
 parse-mineru = ["mineru[core]>=3.4.5,<4.0.0; python_version < '3.14'"]
 parse = [
