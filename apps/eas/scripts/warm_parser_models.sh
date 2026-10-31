@@ -35,7 +35,7 @@ for attempt in {1..60}; do
   sleep 2
 done
 
-CACHE_KEY="${MODEL_VERSIONS};source=${MINERU_MODEL_SOURCE};set=${MINERU_MODEL_TYPE}"
+CACHE_KEY="${MODEL_VERSIONS};docling_ocr=onnxruntime:ch:small;source=${MINERU_MODEL_SOURCE};set=${MINERU_MODEL_TYPE}"
 MARKER="$EAS_DATA_HOST/model-cache/.parser-models-ready"
 
 if [[ -r "$MARKER" ]] && [[ "$(cat "$MARKER")" == "$CACHE_KEY" ]]; then
@@ -50,6 +50,13 @@ python3 scripts/docker_compose.py exec -T -u eas eas python -c \
 echo "Downloading Docling models into the persistent EAS data volume..."
 python3 scripts/docker_compose.py exec -T -u eas eas \
   docling-tools models download --output-dir /app/data/model-cache/docling
+
+echo "Ensuring Docling RapidOCR small checkpoints are cached..."
+python3 scripts/docker_compose.py exec -T -u eas eas \
+  docling-tools models download rapidocr \
+    --output-dir /app/data/model-cache/docling \
+    --rapidocr-backend-lang onnxruntime:ch \
+    --rapidocr-model-size small
 
 echo "Downloading MinerU $MINERU_MODEL_TYPE models from $MINERU_MODEL_SOURCE..."
 python3 scripts/docker_compose.py exec -T -u eas eas \

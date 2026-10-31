@@ -27,6 +27,11 @@ from .formats import (
 
 # HF cache dir-name substrings for Docling's layout/table models.
 _MODEL_DIR_HINTS = ("docling", "ds4sd")
+_RAPIDOCR_SMALL_MODELS = (
+    "PP-OCRv6_det_small.onnx",
+    "ch_ppocr_mobile_v2.0_cls_mobile.onnx",
+    "PP-OCRv6_rec_small.onnx",
+)
 
 
 def _dir_nonempty(path: Path) -> bool:
@@ -76,6 +81,24 @@ def _docling_models_ready() -> bool:
     except Exception:
         return False
     return False
+
+
+def _rapidocr_models_ready(models_dir: Path) -> bool:
+    """Return true only when the OCR checkpoints used by EAS are present.
+
+    Docling's general model downloader may create the artifact directory before
+    RapidOCR's separately downloaded ONNX weights are available. Directory
+    existence alone therefore cannot establish OCR readiness.
+    """
+    rapidocr_dir = models_dir / "RapidOcr"
+    try:
+        return all(
+            (rapidocr_dir / filename).is_file()
+            and (rapidocr_dir / filename).stat().st_size > 0
+            for filename in _RAPIDOCR_SMALL_MODELS
+        )
+    except OSError:
+        return False
 
 
 class DoclingParser:
@@ -129,6 +152,21 @@ class DoclingParser:
                     "Use the package update button below."
                 ),
             )
+        models_dir = docling_models_dir()
+        if config.do_ocr and not config.allow_local_model_download:
+            if not _rapidocr_models_ready(models_dir):
+                return ReadinessReport(
+                    ready=False,
+                    reason="models_missing",
+                    message=(
+                        "Docling OCR models are incomplete. EAS needs the RapidOCR "
+                        "small ONNX checkpoints in "
+                        f"{models_dir / 'RapidOcr'}. Run the parser model warm-up "
+                        "or prefetch with `docling-tools models download rapidocr "
+                        "--rapidocr-backend-lang onnxruntime:ch "
+                        "--rapidocr-model-size small`."
+                    ),
+                )
         if config.allow_local_model_download or _docling_models_ready():
             return ReadinessReport(ready=True)
         return ReadinessReport(
