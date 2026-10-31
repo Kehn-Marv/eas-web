@@ -130,13 +130,9 @@ services:
       # lives on the data volume, so a rebuild reuses what it already fetched.
       # Extras come from pyproject.toml — preview one with
       # `python scripts/install_extras.py --dry-run "<name>"`.
-      # Manim rendering is part of the hosted visualizer experience. Install
-      # its Python runtime dependency on each container start; the pip cache is
-      # persisted under /app/data so later restarts do not re-download it.
-      - EAS_EXTRAS=math-animator
-      # Manim's pycairo/manimpango wheels may need these build headers when
-      # installed on Linux. Runtime libraries (including ffmpeg) are in the image.
-      - EAS_APT_PACKAGES=build-essential,pkg-config,libcairo2-dev,libpango1.0-dev
+      # Manim and its runtime libraries are baked into the production image.
+      # Keep optional runtime installers unset so app startup does not compile
+      # packages or fetch wheels before the API can become healthy.
 
       # Unraid / NAS bind mounts: set these to the host owner of ./data
       # instead of chowning the volume or running the app as root.
