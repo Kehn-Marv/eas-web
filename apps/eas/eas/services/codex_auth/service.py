@@ -19,7 +19,6 @@ from urllib.parse import parse_qs, urlsplit
 import httpx
 
 from eas.services.config.model_catalog import ModelCatalogService
-from eas.services.config.runtime_settings import load_system_settings
 
 from .catalog import CodexModelCatalog
 from .constants import (
@@ -123,10 +122,6 @@ def parse_oauth_callback_url(
     if not code and not error:
         raise _fail("That address carries no authorization result.")
     return code, state, error
-
-
-def ssh_forward_command(callback_port: int, forward_port: int) -> str:
-    return f"ssh -N -L {callback_port}:127.0.0.1:{forward_port} <ssh-user>@<server-host>"
 
 
 def codex_model_id(slug: str) -> str:
@@ -433,18 +428,10 @@ class CodexOAuthService:
         oauth_client: CodexOAuthClient | None = None,
         callback_factory: Callable[[str], Awaitable[Any]] | None = None,
         clock: Callable[[], float] = time.time,
-        callback_forward_port: int = 3782,
     ) -> None:
-        if (
-            isinstance(callback_forward_port, bool)
-            or not isinstance(callback_forward_port, int)
-            or not 1 <= callback_forward_port <= 65535
-        ):
-            raise ValueError("callback_forward_port must be between 1 and 65535")
         self._store = store
         self._catalog = catalog
         self._model_catalog = model_catalog
-        self._callback_forward_port = callback_forward_port
         self._owned_http: httpx.AsyncClient | None = None
         if oauth_client is None:
             self._owned_http = httpx.AsyncClient(timeout=30)
@@ -508,12 +495,7 @@ class CodexOAuthService:
             "authorize_url": operation.authorize_url,
             "expires_in": max(0, int(operation.deadline - self._clock())),
             "callback_port": callback_port,
-            "callback_forward_port": self._callback_forward_port,
             "redirect_uri": operation.redirect_uri,
-            "ssh_forward_command": ssh_forward_command(
-                callback_port,
-                self._callback_forward_port,
-            ),
         }
 
     def _operation_is_active(self) -> bool:
@@ -984,9 +966,6 @@ class CodexOAuthService:
                 else None
             ),
             "callback_port": (operation.callback.port if operation is not None else None),
-            "callback_forward_port": (
-                self._callback_forward_port if operation is not None else None
-            ),
             "redirect_uri": operation.redirect_uri if operation is not None else None,
             "model_count": len(snapshot.models) if snapshot is not None else 0,
             "catalog_source": snapshot.source if snapshot is not None else None,
@@ -1282,7 +1261,6 @@ def get_codex_oauth_service() -> CodexOAuthService:
     key = str(secrets_root)
     service = _SERVICE_INSTANCES.get(key)
     if service is None:
-        callback_forward_port = load_system_settings()["frontend_port"]
         store = CodexCredentialStore(secrets_root)
         http = httpx.AsyncClient(timeout=30)
         catalog = CodexModelCatalog(store, http=http)
@@ -1291,7 +1269,6 @@ def get_codex_oauth_service() -> CodexOAuthService:
             catalog,
             _owner_model_catalog_service(),
             oauth_client=CodexOAuthClient(http),
-            callback_forward_port=callback_forward_port,
         )
         _SERVICE_INSTANCES[key] = service
     return service
@@ -1304,12 +1281,11 @@ async def deliver_codex_oauth_callback(
 ) -> None:
     """Hand a browser OAuth callback to whichever login is awaiting it.
 
-    The browser reaches ``/auth/callback`` on its own loopback address — the
-    far end of the user's tunnel — not on the EAS Web origin, so the
-    request carries no session and the per-user service instance behind
-    :func:`get_codex_oauth_service` cannot be resolved from it. Resolving it
-    anyway would land every callback on the default root and strand every
-    non-administrator mid-login.
+    The browser reaches ``/auth/callback`` on its own loopback address, not on
+    the EAS Web origin. For hosted EAS, the user can paste that callback URL
+    into the authenticated settings page. The callback carries no session, so
+    the per-user service instance cannot be resolved from the request. The
+    OAuth state identifies the correct in-flight operation instead.
 
     The OAuth ``state`` is the identity instead: it is a secret this process
     minted for exactly one login, and it is compared in constant time. That is
@@ -1342,6 +1318,5 @@ __all__ = [
     "get_codex_oauth_service",
     "reconcile_codex_catalog_update",
     "remove_codex_catalog",
-    "ssh_forward_command",
     "sync_codex_catalog",
 ]

@@ -9,7 +9,6 @@ import Button from "@/components/ui/Button";
 import { invalidateLLMOptionsCache } from "@/lib/llm-options";
 import { reasoningEffortOptionsFromSupportedLevels } from "@/lib/reasoning-effort";
 import {
-  buildSshForwardCommand,
   cancelCodexLogin,
   codexRemoteGuidance,
   CodexOAuthApiError,
@@ -206,24 +205,6 @@ export function CodexOAuthCard() {
   const signIn = remoteAccess ? remoteSignIn : localSignIn;
 
   const remoteGuidance = codexRemoteGuidance(status, loginStart);
-  const sshCommand = remoteGuidance
-    ? buildSshForwardCommand(
-        remoteGuidance.callback_port,
-        window.location.hostname,
-        remoteGuidance.callback_forward_port,
-      )
-    : "";
-
-  const copyCommand = async () => {
-    if (!sshCommand) return;
-    try {
-      await navigator.clipboard.writeText(sshCommand);
-      setToast(t("codex.oauth.commandCopied"));
-    } catch {
-      setToast(t("codex.oauth.copyFailed"));
-    }
-  };
-
   const openAuthorization = () => {
     if (!remoteGuidance) return;
     window.open(remoteGuidance.authorize_url, "_blank", "noopener");
@@ -423,18 +404,7 @@ export function CodexOAuthCard() {
                   seconds: remoteGuidance.expires_in,
                 })}
               </p>
-              <pre className="mt-3 overflow-x-auto rounded-md bg-[var(--muted)] p-2 text-xs">
-                <code>{sshCommand}</code>
-              </pre>
               <div className="mt-3 flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => void copyCommand()}
-                >
-                  {t("codex.oauth.copyCommand")}
-                </Button>
                 <Button
                   type="button"
                   size="sm"

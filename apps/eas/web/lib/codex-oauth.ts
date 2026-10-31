@@ -22,7 +22,6 @@ export type CodexOAuthStatus = {
   authorize_url: string | null;
   expires_in: number | null;
   callback_port: number | null;
-  callback_forward_port: number | null;
   redirect_uri: string | null;
   model_count: number;
   catalog_source:
@@ -43,12 +42,10 @@ export type CodexLoginStart = {
   authorize_url: string;
   expires_in: number;
   callback_port: number;
-  callback_forward_port: number;
   redirect_uri: string;
-  ssh_forward_command: string;
 };
 
-export type CodexRemoteGuidance = Omit<CodexLoginStart, "ssh_forward_command">;
+export type CodexRemoteGuidance = CodexLoginStart;
 
 export class CodexOAuthApiError extends Error {
   code: string;
@@ -84,15 +81,6 @@ export function isLoopbackHostname(hostname: string): boolean {
   );
 }
 
-export function buildSshForwardCommand(
-  callbackPort: number,
-  hostname: string,
-  forwardPort: number,
-): string {
-  const serverHost = hostname.trim() || "<server-host>";
-  return `ssh -N -L ${callbackPort}:127.0.0.1:${forwardPort} <ssh-user>@${serverHost}`;
-}
-
 export function codexRemoteGuidance(
   status: CodexOAuthStatus | null,
   loginStart: CodexLoginStart | null,
@@ -105,14 +93,11 @@ export function codexRemoteGuidance(
   const authorizeUrl = status.authorize_url ?? matchingStart?.authorize_url;
   const expiresIn = status.expires_in ?? matchingStart?.expires_in;
   const callbackPort = status.callback_port ?? matchingStart?.callback_port;
-  const callbackForwardPort =
-    status.callback_forward_port ?? matchingStart?.callback_forward_port;
   const redirectUri = status.redirect_uri ?? matchingStart?.redirect_uri;
   if (
     !authorizeUrl ||
     expiresIn == null ||
     callbackPort == null ||
-    callbackForwardPort == null ||
     !redirectUri
   ) {
     return null;
@@ -122,7 +107,6 @@ export function codexRemoteGuidance(
     authorize_url: authorizeUrl,
     expires_in: expiresIn,
     callback_port: callbackPort,
-    callback_forward_port: callbackForwardPort,
     redirect_uri: redirectUri,
   };
 }
