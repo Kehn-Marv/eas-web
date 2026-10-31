@@ -267,8 +267,11 @@ For learners and students who want to start immediately without installing Docke
    - The landing page greets you with feature walkthroughs; click **"Open learning space"** to enter.
 
 2. **Connect a Free Model via OAuth:**
-   - Navigate to **Settings -> Model Providers** in the sidebar.
-   - Select **OpenAI Codex** and sign in (via Google authentication). This links your free-tier account directly to EAS, giving you instant access to conversational reasoning and study sessions without incurring API billing fees.
+   - Open **Settings -> Providers -> OpenAI Codex OAuth**, then choose **Open authorization**. Sign in to the ChatGPT account you want to use.
+   - EAS is hosted remotely, so the OAuth redirect returns to a `localhost` callback on your own computer. The browser may appear to load or redirect briefly, then show that the page cannot be reached. This is expected: the callback listener is inside the hosted EAS container, not your computer. Do not panic or close the sign-in attempt.
+   - Copy the **entire address** from the browser address bar, including everything after `?`, and return to the still-open EAS settings page. Paste it into **Callback address**, then choose **Finish sign-in**.
+   - Leave the EAS settings page open and wait a little while for the connection to finish. Do not start another sign-in or click Finish again while it is processing. EAS will show the connection status when it completes. The callback is short-lived, so if it expires, start again and use the new address.
+   - Keep the callback address private. It contains a temporary sign-in code and should only be pasted into the EAS page that started the login.
 
 3. **(Optional) Personal API Keys:**
    - If you have personal API keys for other models (OpenAI, Anthropic Claude, DashScope Qwen, Perplexity) or a local Ollama endpoint, you can configure them under **Settings -> Model Providers** at any time.
