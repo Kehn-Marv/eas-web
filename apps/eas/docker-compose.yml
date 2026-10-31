@@ -130,7 +130,10 @@ services:
       # lives on the data volume, so a rebuild reuses what it already fetched.
       # Extras come from pyproject.toml — preview one with
       # `python scripts/install_extras.py --dry-run "<name>"`.
-      # - EAS_EXTRAS=math-animator,partners
+      # Manim rendering is part of the hosted visualizer experience. Install
+      # its Python runtime dependency on each container start; the pip cache is
+      # persisted under /app/data so later restarts do not re-download it.
+      - EAS_EXTRAS=math-animator
       # - EAS_APT_PACKAGES=ffmpeg
 
       # Unraid / NAS bind mounts: set these to the host owner of ./data

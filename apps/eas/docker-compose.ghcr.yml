@@ -81,6 +81,7 @@ services:
     environment:
       - EAS_WORKSPACE_ROOT=/workspace
       - EAS_WORKSPACE_ALLOWED_ROOTS=/workspace
+      - EAS_EXTRAS=math-animator
 
     # Optional dependencies, re-applied on every start (#762). This image
     # ships the base install; anything added with `docker exec … pip install`
@@ -94,7 +95,9 @@ services:
     # paid for. Preview an extra with
     # `python scripts/install_extras.py --dry-run "<name>"`. Uncomment the
     # Optional entries can be added to the environment list above.
-    #   - EAS_EXTRAS=math-animator,partners
+    # Manim rendering is part of the visualizer experience. Keep its optional
+    # Python runtime dependency enabled for GHCR-based deployments too.
+    #   - EAS_EXTRAS=math-animator
     #   - EAS_APT_PACKAGES=ffmpeg
     # Unraid / NAS bind mounts: PUID/PGID remap the unprivileged eas
     # user to the host owner of ./data. Do not run the app as root.
