@@ -290,6 +290,10 @@ class TurnExecutor:
             history_context = ""
             question_bank_context = ""
             book_context = ""
+            # Book context is currently empty unless a future resolver fills
+            # it. Keep warnings explicit so turns without book references do
+            # not fail while constructing the unified context.
+            book_context_warnings: list[str] = []
 
             import base64 as _b64
             import uuid as _uuid
@@ -964,7 +968,7 @@ class TurnExecutor:
                     "immersive_reading_mode": workspace_mode == WORKSPACE_MODE_READING,
                     "reading_viewport": _reading_viewport(payload.get("reading_viewport")),
                     "book_context": book_context,
-                    "book_context_warnings": book_context_result.warnings,
+                    "book_context_warnings": book_context_warnings,
                     "memory_references": memory_references,
                     "question_bank_context": question_bank_context,
                     "memory_context": memory_context,
