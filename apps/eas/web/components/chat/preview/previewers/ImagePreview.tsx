@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
+import { usePreviewUrl } from "./usePreviewUrl";
 
 /**
  * Image preview. Uses a native <img> instead of next/image because:
@@ -20,7 +21,9 @@ export default function ImagePreview({
   filename: string;
 }) {
   const { t } = useTranslation();
-  const [state, setState] = useState<"loading" | "ready" | "error">("loading");
+  const { src, loading, error } = usePreviewUrl(url);
+  const [imageError, setImageError] = useState(false);
+  useEffect(() => setImageError(false), [src]);
 
   return (
     <div
@@ -35,7 +38,7 @@ export default function ImagePreview({
         backgroundPosition: "0 0, 0 8px, 8px -8px, -8px 0px",
       }}
     >
-      {state === "loading" && (
+      {loading && (
         <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
           <Loader2
             size={16}
@@ -43,18 +46,17 @@ export default function ImagePreview({
           />
         </div>
       )}
-      {state === "error" ? (
+      {error || imageError || !src ? (
         <div className="text-[12px] text-[var(--muted-foreground)]">
           {t("Failed to load image.")}
         </div>
       ) : (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={url}
+          src={src}
           alt={filename}
           className="max-h-full max-w-full object-contain"
-          onLoad={() => setState("ready")}
-          onError={() => setState("error")}
+          onError={() => setImageError(true)}
         />
       )}
     </div>

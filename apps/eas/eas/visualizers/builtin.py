@@ -10,10 +10,28 @@ from eas.tools.vision.ggb_validator import validate_ggbscript
 from .protocol import VisualizerManifest, VisualizerPlugin
 
 _GENERAL = """
-Generate the visualization itself, not an essay about it. Keep labels concise,
-use a coherent visual hierarchy, and include only elements that help the stated
-learning goal. The payload must be complete and directly renderable. Do not put
-Markdown fences around the payload passed to submit_visualization.
+Generate the visualization itself, not an essay about it. First identify the
+learner's main takeaway and choose the visual form that teaches it best: a plot
+for quantitative change, a labeled schematic for spatial structure, a sequence
+for causality, or a small set of steps for a procedure. Do not default to a
+dashboard of cards. Vary the composition to fit the subject. Keep one clear
+focal point, consistent spacing, readable labels, restrained color, and enough
+whitespace. Use short, concrete language and remove decorative elements that
+do not teach.
+
+Preserve facts and relationships from the request and supplied sources. Do not
+invent source data; when an illustrative model or sample values help, label them
+as illustrative and make their assumptions visible. For interactive work, every
+control must change a meaningful state or computed result, explain what changed,
+and have sensible bounds, units, and a reset path. Make the result responsive,
+keyboard usable, and legible at ordinary laptop and phone widths. For
+quantitative charts, use truthful scales, labeled axes with units, and values
+derived from the stated model or clearly marked as illustrative.
+
+Before submission, silently review the payload for accuracy, hierarchy,
+clipping/overlap, missing labels, and controls that do nothing. Correct issues
+in this same pass. The payload must be complete and directly renderable. Do not
+put Markdown fences around the payload passed to submit_visualization.
 """.strip()
 
 
