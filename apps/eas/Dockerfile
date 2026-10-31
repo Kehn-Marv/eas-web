@@ -89,6 +89,8 @@ RUN --mount=type=cache,target=/var/cache/apt/archives,sharing=locked \
     libxext6 \
     libxrender1 \
     pkg-config \
+    libcairo2-dev \
+    libpango1.0-dev \
     libssl-dev \
     && rm -rf /var/lib/apt/lists/* \
     && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
@@ -156,6 +158,14 @@ RUN --mount=type=cache,target=/var/cache/apt/archives,sharing=locked \
     libsm6 \
     libxext6 \
     libxrender1 \
+    ffmpeg \
+    libcairo2 \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    texlive-latex-extra \
+    texlive-fonts-recommended \
+    texlive-science \
+    dvisvgm \
     libreoffice-writer \
     libreoffice-calc \
     libreoffice-impress \
