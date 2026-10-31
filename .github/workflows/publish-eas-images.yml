@@ -41,6 +41,9 @@ jobs:
         with:
           context: apps/eas
           file: apps/eas/Dockerfile
+          # The Dockerfile's final stage is the development image. Pin the
+          # published runtime explicitly to the production stage.
+          target: production
           push: true
           tags: |
             ${{ env.IMAGE_NAMESPACE }}/eas-web:latest
