@@ -82,6 +82,7 @@ services:
       - EAS_WORKSPACE_ROOT=/workspace
       - EAS_WORKSPACE_ALLOWED_ROOTS=/workspace
       - EAS_EXTRAS=math-animator
+      - EAS_APT_PACKAGES=build-essential,pkg-config,libcairo2-dev,libpango1.0-dev
 
     # Optional dependencies, re-applied on every start (#762). This image
     # ships the base install; anything added with `docker exec … pip install`
@@ -98,7 +99,8 @@ services:
     # Manim rendering is part of the visualizer experience. Keep its optional
     # Python runtime dependency enabled for GHCR-based deployments too.
     #   - EAS_EXTRAS=math-animator
-    #   - EAS_APT_PACKAGES=ffmpeg
+    # Manim's pycairo/manimpango builds may need these development packages.
+    #   - EAS_APT_PACKAGES=build-essential,pkg-config,libcairo2-dev,libpango1.0-dev
     # Unraid / NAS bind mounts: PUID/PGID remap the unprivileged eas
     # user to the host owner of ./data. Do not run the app as root.
     #   - PUID=99

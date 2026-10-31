@@ -134,7 +134,9 @@ services:
       # its Python runtime dependency on each container start; the pip cache is
       # persisted under /app/data so later restarts do not re-download it.
       - EAS_EXTRAS=math-animator
-      # - EAS_APT_PACKAGES=ffmpeg
+      # Manim's pycairo/manimpango wheels may need these build headers when
+      # installed on Linux. Runtime libraries (including ffmpeg) are in the image.
+      - EAS_APT_PACKAGES=build-essential,pkg-config,libcairo2-dev,libpango1.0-dev
 
       # Unraid / NAS bind mounts: set these to the host owner of ./data
       # instead of chowning the volume or running the app as root.
