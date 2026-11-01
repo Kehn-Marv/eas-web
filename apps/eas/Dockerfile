@@ -109,6 +109,17 @@ COPY eas/ ./eas/
 RUN pip install --upgrade pip && \
     pip install -r requirements.txt
 
+# Keep the very large parser/ML dependency tree in stable, bounded OCI layers.
+# A single COPY of site-packages can exceed registry/proxy transfer limits; a
+# hashed partition keeps each blob small and lets later builds reuse unchanged
+# package files independently.
+FROM python-base AS python-package-layers
+COPY scripts/docker_split_site_packages.py /tmp/docker_split_site_packages.py
+RUN python /tmp/docker_split_site_packages.py \
+    --source /usr/local/lib/python3.11/site-packages \
+    --target /tmp/site-packages-layers \
+    --parts 24
+
 # ============================================
 # Stage 3: Production Image
 # ============================================
@@ -162,10 +173,20 @@ RUN --mount=type=cache,target=/var/cache/apt/archives,sharing=locked \
     libcairo2 \
     libpango-1.0-0 \
     libpangocairo-1.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Split TeX and office rendering packages so no single compressed OS layer
+# becomes a multi-hundred-megabyte transfer bottleneck.
+RUN --mount=type=cache,target=/var/cache/apt/archives,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
     texlive-latex-extra \
     texlive-fonts-recommended \
     texlive-science \
     dvisvgm \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN --mount=type=cache,target=/var/cache/apt/archives,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
     libreoffice-writer \
     libreoffice-calc \
     libreoffice-impress \
@@ -180,8 +201,31 @@ RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
     && ln -sf /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx \
     && node --version && npm --version
 
-# Copy Python packages from builder stage
-COPY --from=python-base /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+# Copy bounded Python package layers from the dependency builder.
+COPY --from=python-package-layers /tmp/site-packages-layers/00/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/01/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/02/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/03/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/04/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/05/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/06/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/07/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/08/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/09/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/10/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/11/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/12/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/13/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/14/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/15/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/16/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/17/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/18/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/19/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/20/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/21/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/22/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/23/ /usr/local/lib/python3.11/site-packages/
 COPY --from=python-base /usr/local/bin /usr/local/bin
 
 # Copy built frontend from frontend-builder stage (standalone mode)
