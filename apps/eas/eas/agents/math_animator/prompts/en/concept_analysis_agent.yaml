@@ -16,6 +16,10 @@ user_template: |
   Reference image count: {reference_count}
 
   Return JSON:
+  Follow the schema exactly. Every item in math_focus, visual_targets, and
+  narrative_steps must be a plain JSON string. Do not return scene objects,
+  dictionaries, or nested JSON in those arrays. Put each storyboard beat into
+  one concise narrative_steps string that includes its purpose and key visual.
   {{
     "learning_goal": "What the user wants to teach or demonstrate",
     "math_focus": ["core idea 1", "core idea 2"],
