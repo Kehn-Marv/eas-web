@@ -118,7 +118,7 @@ COPY scripts/docker_split_site_packages.py /tmp/docker_split_site_packages.py
 RUN python /tmp/docker_split_site_packages.py \
     --source /usr/local/lib/python3.11/site-packages \
     --target /tmp/site-packages-layers \
-    --parts 24
+    --parts 64
 
 # ============================================
 # Stage 3: Production Image
@@ -226,6 +226,46 @@ COPY --from=python-package-layers /tmp/site-packages-layers/20/ /usr/local/lib/p
 COPY --from=python-package-layers /tmp/site-packages-layers/21/ /usr/local/lib/python3.11/site-packages/
 COPY --from=python-package-layers /tmp/site-packages-layers/22/ /usr/local/lib/python3.11/site-packages/
 COPY --from=python-package-layers /tmp/site-packages-layers/23/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/24/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/25/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/26/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/27/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/28/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/29/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/30/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/31/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/32/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/33/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/34/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/35/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/36/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/37/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/38/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/39/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/40/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/41/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/42/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/43/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/44/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/45/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/46/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/47/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/48/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/49/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/50/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/51/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/52/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/53/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/54/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/55/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/56/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/57/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/58/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/59/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/60/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/61/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/62/ /usr/local/lib/python3.11/site-packages/
+COPY --from=python-package-layers /tmp/site-packages-layers/63/ /usr/local/lib/python3.11/site-packages/
 COPY --from=python-base /usr/local/bin /usr/local/bin
 
 # Copy built frontend from frontend-builder stage (standalone mode)
